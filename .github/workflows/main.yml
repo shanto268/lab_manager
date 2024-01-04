@@ -1,0 +1,84 @@
+name: Lab Notifications
+
+on:
+  schedule:
+    # Presentation reminders - adjust 'cron' for your chosen day (e.g., Monday at 7 AM)
+    - cron: '0 7 * * 1'
+    # Lab maintenance reminders - every Friday at 7 AM
+    - cron: '0 7 * * 5'
+    # Lab snacks reminders - assuming the day before presentations (e.g., Sunday at 7 AM)
+    - cron: '0 7 * * 0'
+  workflow_dispatch:
+
+jobs:
+  presentation-reminders:
+    if: github.event.schedule == '0 7 * * 1'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.8'  # Specify your Python version
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt  # Assuming you have a requirements.txt
+
+      - name: Send presentation reminders
+        run: python main.py
+        env:
+          GMAIL_USERNAME: ${{ secrets.GMAIL_USERNAME }}
+          GMAIL_PASSWORD: ${{ secrets.GMAIL_PASSWORD }}
+          SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+          GOOGLE_CALENDAR_SERVICE_KEY: ${{ secrets.GOOGLE_CALENDAR_SERVICE_KEY }}
+
+  maintenance-reminders:
+    if: github.event.schedule == '0 7 * * 5'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.8'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Send maintenance reminders
+        run: python main.py
+        env:
+          GMAIL_USERNAME: ${{ secrets.GMAIL_USERNAME }}
+          GMAIL_PASSWORD: ${{ secrets.GMAIL_PASSWORD }}
+          SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+          GOOGLE_CALENDAR_SERVICE_KEY: ${{ secrets.GOOGLE_CALENDAR_SERVICE_KEY }}
+
+  snacks-reminders:
+    if: github.event.schedule == '0 7 * * 0'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.8'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Send snacks reminders
+        run: python main.py
+        env:
+          GMAIL_USERNAME: ${{ secrets.GMAIL_USERNAME }}
+          GMAIL_PASSWORD: ${{ secrets.GMAIL_PASSWORD }}
+          SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+          GOOGLE_CALENDAR_SERVICE_KEY: ${{ secrets.GOOGLE_CALENDAR_SERVICE_KEY }}
