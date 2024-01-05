@@ -1,0 +1,6 @@
+google_api_python_client==2.112.0
+google_auth_oauthlib==1.0.0
+holidays==0.40
+protobuf==4.25.1
+python_dateutil==2.8.2
+Requests==2.31.0

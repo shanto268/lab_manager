@@ -32,5 +32,17 @@ Thumbs.db
 *.key
 *.pem
 *.env
+.secrets
+*.secrets
 service_key.json
 lab_members.json
+token.json
+client_secret.json
+token.pickle
+
+# Ignore yml for act
+.github/workflows/test_*.yml
+
+# Ignore pycache
+__pycache__/
+*.py[cod]
