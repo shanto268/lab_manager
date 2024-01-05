@@ -13,6 +13,7 @@ from google.auth.transport.requests import Request
 class CalendarManager:
     def __init__(self, email_notifier, client_secret_file="client_secret.json", token_file='token.pickle', scopes=['https://www.googleapis.com/auth/calendar']):
         self.credentials = None
+        self.email_notifier = email_notifier
         if os.path.exists(token_file):
             with open(token_file, 'rb') as token:
                 self.credentials = pickle.load(token)
@@ -28,26 +29,32 @@ class CalendarManager:
             with open(token_file, 'wb') as token:
                 pickle.dump(self.credentials, token)
 
-        self.service = build('calendar', 'v3', credentials=self.credentials)
-        self.email_notifier = email_notifier
+            self.email_notifier.send_email([__email__], 'Re-authentication Required', 'Please re-authenticate your app.')
 
-    def create_event(self, title, start_date, end_date, attendees, all_day=False):
+        self.service = build('calendar', 'v3', credentials=self.credentials)
+
+    def create_event(self, title, description, start_date, end_date, attendees, all_day=False, location="SSC 319"):
         """Create a calendar event without attendees."""
         time_zone = 'America/Los_Angeles'
         if all_day:
             # For all-day events, use 'date' instead of 'dateTime'
             start = {'date': start_date}
             end = {'date': end_date}
+            colorId = "2"
         else:
             # For timed events, use 'dateTime'
             start = {'dateTime': start_date, 'timeZone': time_zone}
             end = {'dateTime': end_date, 'timeZone': time_zone}
-        # Add attendees if provided
+            colorId = "4"
+        # Add location if provided
         event_body = {
             'summary': title,
+            'description': description,
+            'colorId': colorId,  # '2' for all-day, '4' for timed
             'start': start,
             'end': end,
             'attendees': [{'email': attendee} for attendee in attendees],
+            'location': location,
             'reminders': {
                 'useDefault': False,
                 'overrides': [{'method': 'email', 'minutes': 24 * 60},
@@ -65,7 +72,7 @@ class CalendarManager:
             raise
 
 
-    def create_timed_event(self, title, date, start_time_str, attendees, calendar_id='primary'):
+    def create_timed_event(self, title, date, start_time_str, attendees, calendar_id='primary', location="SSC 319"):
         """Create a calendar event based on a start time string."""
         time_zone = 'America/Los_Angeles'
         
@@ -78,9 +85,11 @@ class CalendarManager:
 
         event_body = {
             'summary': title,
+            "colorId": "10",
             'start': {'dateTime': start_datetime.isoformat(), 'timeZone': time_zone},
             'end': {'dateTime': end_datetime.isoformat(), 'timeZone': time_zone},
             'attendees': [{'email': attendee} for attendee in attendees],
+            'location': location,
             'reminders': {
                 'useDefault': False,
                 'overrides': [{'method': 'email', 'minutes': 24 * 60}, {'method': 'popup', 'minutes': 10}],

@@ -10,6 +10,47 @@ from email_notifier import EmailNotifier
 from slack_notifier import SlackNotifier
 from calendar_manager import CalendarManager
 
+
+MEETING_SIGNATURE = "\n\nLooking Forward to it 🤩,\nLFL Bot."
+SERVICE_SIGNATURE = "\n\nThank you for your service 🫡,\nLFL Bot."
+
+def create_reminder(instruction):
+    check_symbol = "-"
+    # check_symbol = "-"
+    return "{} {}\n".format(check_symbol, instruction)
+
+def create_step(reminder):
+    check_symbol = "☐"
+    # check_symbol = "-"
+    return "{} {}\n".format(check_symbol, reminder)
+
+def get_header(name, date_maintenance):
+    header = "Hi {},\n\nThis is a reminder that tomorrow ({}) is your turn to do the LFL Lab Maintenance. Please refer to the following checklist.\n\n".format(name, date_maintenance)
+    return header
+
+def get_signature(bot_name="LFL Bot"):
+    salute = "🫡 "
+    # salute = ""
+    return "\n\nThank you for your service {},\n{}".format(salute, bot_name)
+
+def get_reminders(reminders_list):
+    reminders = []
+    for reminder_string in reminders_list:
+        reminders.append(create_reminder(reminder_string))
+    prompt = "\n\nSome safety considerations from EH&S:\n"
+    reminders = "".join(reminders)
+    return prompt + reminders + "\n"
+
+def create_email_content(name, date_maintenance, instructions, reminders, bot_name="LFL Bot"):
+    header = get_header(name, date_maintenance)
+    steps = []
+    for instruction in instructions:
+        steps.append(create_step(instruction))
+    body = "".join(steps)
+    reminders = get_reminders(reminders)
+    signature = get_signature(bot_name)
+    return header + body + reminders + signature
+
 def chosen_day(day_name):
     days = {
         "Monday": 0,
@@ -37,21 +78,17 @@ def load_google_service_key(file_path):
             raise ValueError(f"Failed to load Google service key: {e}")
 
 class LabNotificationSystem:
-    def __init__(self, presentation_day, presentation_time, presentation_message, maintenance_day, maintenance_message, snacks_message):
+    def __init__(self, presentation_day, presentation_time, maintenance_day):
         self.lab_members = ConfigLoader('lab_members.json').load_config()
         self.gmail_username = os.environ.get('GMAIL_USERNAME')
         self.gmail_password = os.environ.get('GMAIL_PASSWORD')
         self.slack_token = os.environ.get('SLACK_TOKEN')
-        #self.google_calendar_service_key = get_decoded_service_key(os.environ.get('GOOGLE_CALENDAR_SERVICE_KEY'))
         self.google_calendar_service_key = load_google_service_key('service_key.json')
 
 
         self.maintenance_day = chosen_day(maintenance_day)
         self.presentation_day = chosen_day(presentation_day)
         self.presentation_time = presentation_time
-        self.presentation_message = presentation_message
-        self.maintenance_message = maintenance_message
-        self.snacks_message = snacks_message
         self.us_holidays = holidays.US()
 
 
@@ -114,12 +151,12 @@ class LabNotificationSystem:
                 # Handle group presentation for undergraduates
                 if is_group_presentation:
                     for presenter_info in presenters:
-                        subject = "Your Turn to Present at Next Week's Lab Meeting"
-                        message = f"Hello {presenter_info['name']},\n\nYou are scheduled to present at next week's lab meeting as part of the undergraduate group presentation."
+                        subject = "LFL Lab Meeting Presentation"
+                        message = f"Hello {presenter_info['name']},\n\nYou are scheduled to present at next week's lab meeting." + MEETING_SIGNATURE
                         self.email_notifier.send_email([presenter_info['email']], subject, message)
 
                     # Slack notification for group presentation
-                    self.slack_notifier.send_message('#test-gpt', "This week's presentation will be given by our undergraduate students.")
+                    self.slack_notifier.send_message('#test-gpt', "This week's presentation will be given by our undergrads.")
 
                     # Create Google Calendar event for group presentation
                     self.calendar_manager.create_timed_event(
@@ -132,8 +169,8 @@ class LabNotificationSystem:
                 # Handle individual presentation
                 else:
                     presenter_info = presenters[0]  # Only one presenter
-                    subject = "Your Turn to Present at Next Week's Lab Meeting"
-                    message = f"Hello {presenter_info['name']},\n\nYou are scheduled to present at next week's lab meeting."
+                    subject = "LFL Lab Meeting Presentation"
+                    message = f"Hello {presenter_info['name']},\n\nYou are scheduled to present at next week's lab meeting." + MEETING_SIGNATURE
                     self.email_notifier.send_email([presenter_info['email']], subject, message)
 
                     # Slack notification for individual presentation
@@ -141,7 +178,7 @@ class LabNotificationSystem:
 
                     # Create Google Calendar event for individual presentation
                     self.calendar_manager.create_timed_event(
-                        title="Individual Presentation by " + presenter_info['name'],
+                        title="Group Meeting Presentation by " + presenter_info['name'],
                         date=pres_date,
                         start_time_str=self.presentation_time,
                         attendees=[member['email'] for member in presenters]
@@ -174,6 +211,19 @@ class LabNotificationSystem:
             # Next presenter is not an undergraduate
             return [next_presenter], next_presenter['id'], False
 
+    def lab_maintance_email(self, recipient_name, date_maintenance):
+
+        ln2_instruction = "Please schedule a Liquid Nitrogen Fill Up with Jivin (jseward@usc.edu) and refill our tank"
+
+        instructions = [ln2_instruction, "Check Lab Inventory: napkins, water filters, gloves, masks, printing supply, compressed air", "Check Chemical Inventory", "Assess Water Filter Status", "Check cooling water temperature and pressure", "Fill up traps and dewars with LN2", "General Cleanup of the Lab (call people out if needed)","Monitor waste labels and complete them if they are missing any information", "Issue a Waste Pick Up Request with EH&S if Accumulation Date on a label is almost 9 months or if you need to dispose of the waste ASAP", "Version Control and Back Up Code Base on GitHub"]
+
+        reminders = ["🌳 Wear O2 monitor while doing LN2 fill up","🚪 Keep Back Room Door open while doing LN2 fill up","🪤 Don't position yourself such that you are trapped by the dewar","👖 Wear full pants on Lab Maintenance Day", "🚫 Don't reuse gloves", "🦠 Don't touch non-contaminated items with gloves", "🧤 Wear thermal gloves when working with LN2", "🥼🥽 Wear safety coat and goggles", "👥 Use the buddy system if not comfortable doing a task alone"]
+
+
+        return create_email_content(recipient_name, date_maintenance, instructions, reminders)
+
+
+    
     def send_lab_maintenance_reminders(self):
         if datetime.today().weekday() == self.maintenance_day:
             tracker = self.load_duty_tracker()
@@ -183,16 +233,22 @@ class LabNotificationSystem:
 
             # Send email reminder
             maintainer_info = next((member for member in eligible_members if member['id'] == next_maintenance_id), {})
+            
+            # Create email content
+            date_maintenance = (date.today() + timedelta(days=1)).isoformat()
+            maintenance_message = self.lab_maintance_email(maintainer_info['name'], date_maintenance)
+
             if maintainer_info:
-                subject = "Lab Maintenance Duty Reminder"
-                message = f"Hello {maintainer_info['name']},\n\nThis is a reminder that you are on lab maintenance duty next week."
+                subject = "Lab Maintenance Reminder"
+                message = f"Hello {maintainer_info['name']},\n\nThis is a reminder that you are on lab maintenance duty next week." + maintenance_message + SERVICE_SIGNATURE
                 self.email_notifier.send_email([maintainer_info['email']], subject, message)
 
                 # Create a calendar event for the maintenance week
                 start_date = (date.today() + timedelta(days=3)).isoformat()  # Start from next Monday
                 end_date = (date.today() + timedelta(days=7)).isoformat()    # End on next Friday
                 self.calendar_manager.create_event(
-                    title="Lab Maintenance Duty",
+                    title=f"Lab Maintenance by {maintainer_info['name']}",
+                    description=maintenance_message,
                     start_date=start_date,
                     end_date=end_date,
                     attendees=[maintainer_info['email']],
@@ -224,12 +280,7 @@ class LabNotificationSystem:
 if __name__ == "__main__":
     presentation_day = "Thursday"
     presentation_time = "2:00 PM"
-    presentation_message = "This week's presentation will be given by {presenter_name}."
+    maintenance_day = "Thursday"
 
-    snacks_message = "This is a reminder for you to bring snacks for the lab meeting on {presentation_day}."
-
-    maintenance_day = "Friday"
-    maintenance_message = "This is a reminder that you are on lab maintenance duty next week."
-
-    system = LabNotificationSystem(presentation_day, presentation_time, presentation_message, maintenance_day, maintenance_message, snacks_message)
+    system = LabNotificationSystem(presentation_day, presentation_time, maintenance_day)
     system.run()

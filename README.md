@@ -1,39 +1,44 @@
 # LFL Lab Manager
 
-This project aims to serve as a lab manager for the [Levenson-Falk Lab](https://dornsife.usc.edu/lfl/) at USC.
-
-So far, it includes features to serve as a notification system designed to automate reminders for a lab environment. It includes features for sending maintenance and snack reminders, as well as managing scheduling through Google Calendar.
+This project serves as a lab manager for the [Levenson-Falk Lab](https://dornsife.usc.edu/lfl/) at USC. Presently, it automates reminders for maintenance, snacks, and manages lab meeting schedules through emails, Slack and Google Calendar.
 
 ## Project Structure
 
-```
-.github/
-	workflows/
-		main.yml
-.gitignore
-README.md
-calendar_manager.py
-config_loader.py
-duty_tracker.json
-email_notifier.py
-main.py
-slack_notifier.py
-```
+- `.github/`: Contains GitHub workflows for automation.
+- `calendar_manager.py`: Manages Google Calendar integration.
+- `config_loader.py`: Loads configuration from JSON files.
+- `email_notifier.py`: Handles email notifications.
+- `main.py`: The main script for managing notifications.
+- `slack_notifier.py`: Manages Slack notifications.
+- `duty_tracker.json`: Tracks the rotation of lab duties.
 
-## Key Files
+## Setup and Operation
 
-- [`main.py`](command:_github.copilot.openRelativePath?%5B%22main.py%22%5D "main.py"): The main script that orchestrates the notification system.
-- [`config_loader.py`](command:_github.copilot.openRelativePath?%5B%22config_loader.py%22%5D "config_loader.py"): Module to load configuration from JSON files.
-- [`email_notifier.py`](command:_github.copilot.openRelativePath?%5B%22email_notifier.py%22%5D "email_notifier.py"): Handles the email notification system.
-- [`slack_notifier.py`](command:_github.copilot.openRelativePath?%5B%22slack_notifier.py%22%5D "slack_notifier.py"): Manages notifications on Slack.
-- [`calendar_manager.py`](command:_github.copilot.openRelativePath?%5B%22calendar_manager.py%22%5D "calendar_manager.py"): Integrates with Google Calendar for scheduling.
+1. **Local Setup**:
+   - Install dependencies from `requirements.txt`.
+   - Set up environment variables for Gmail, Slack, and Google Calendar credentials.
+   - Use `client_secret.json` and `token.pickle` for Google Calendar API.
+
+2. **PythonAnywhere Setup**:
+   - Upload the script files to PythonAnywhere.
+   - Set up a scheduled task to run `main.py` daily at 7 AM.
+   - Ensure `client_secret.json` and `token.pickle` are safely uploaded and handled.
+
+3. **Handling Authentication**:
+   - The script checks the validity of `token.pickle`.
+   - If re-authentication is required, it sends an email notification.
+   - Manually update `token.pickle` on PythonAnywhere after re-authenticating locally.
+
+**Note**: For security, never store sensitive information like lab members' details and service keys in the repository.
 
 ## GitHub Actions
 
-The project uses GitHub Actions for automation. The workflow configuration is in [`.github/workflows/main.yml`](command:_github.copilot.openRelativePath?%5B%22.github%2Fworkflows%2Fmain.yml%22%5D ".github/workflows/main.yml"). It includes jobs for sending maintenance and snack reminders.
+The project *can* be configured to use the GitHub Action defined in `.github/workflows/main.yml` to automate reminders.
 
-## Setup
+## Security
 
-To set up the project, install the dependencies listed in `requirements.txt`. You'll also need to set up environment variables for Gmail and Slack credentials, as well as the Google Calendar service key.
+Sensitive information is handled securely, and environment variables are used to store credentials.
 
-Please note that this project is designed with security in mind. **Sensitive information like lab members' details and service keys should never be stored in the repository.**
+---
+
+**Remember to keep the `token.pickle` and `client_secret.json` files secure and handle them carefully during deployment and updates.**
