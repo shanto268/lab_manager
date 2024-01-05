@@ -23,13 +23,13 @@ class CalendarManager:
             if self.credentials and self.credentials.expired and self.credentials.refresh_token:
                 self.credentials.refresh(Request())
             else:
+                self.email_notifier.send_email([__email__], 'Re-authentication Required', 'Please re-authenticate your app.')
                 flow = InstalledAppFlow.from_client_secrets_file(client_secret_file, scopes=scopes)
                 self.credentials = flow.run_local_server(port=0)
             # Save the credentials for the next run
             with open(token_file, 'wb') as token:
                 pickle.dump(self.credentials, token)
 
-            self.email_notifier.send_email([__email__], 'Re-authentication Required', 'Please re-authenticate your app.')
 
         self.service = build('calendar', 'v3', credentials=self.credentials)
 
@@ -61,7 +61,6 @@ class CalendarManager:
                               {'method': 'popup', 'minutes': 10}],
             },
         }
-        print(f"Creating event: {event_body}")
         try:
             event = self.service.events().insert(calendarId='primary', body=event_body).execute()
             print('Event created: %s' % (event.get('htmlLink')))
@@ -95,7 +94,6 @@ class CalendarManager:
                 'overrides': [{'method': 'email', 'minutes': 24 * 60}, {'method': 'popup', 'minutes': 10}],
             },
         }
-        print(f"Creating event: {event_body}")
         try:
             event = self.service.events().insert(calendarId=calendar_id, body=event_body).execute()
             print('Event created: %s' % (event.get('htmlLink')))

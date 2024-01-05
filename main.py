@@ -240,7 +240,7 @@ class LabNotificationSystem:
 
             if maintainer_info:
                 subject = "Lab Maintenance Reminder"
-                message = f"Hello {maintainer_info['name']},\n\nThis is a reminder that you are on lab maintenance duty next week." + maintenance_message + SERVICE_SIGNATURE
+                message = maintenance_message
                 self.email_notifier.send_email([maintainer_info['email']], subject, message)
 
                 # Create a calendar event for the maintenance week
@@ -271,16 +271,16 @@ class LabNotificationSystem:
             snack_person_info = next((member for member in eligible_members if member['id'] == next_snacks_id), {})
             if snack_person_info:
                 subject = "Lab Snacks Reminder"
-                message = f"Hello {snack_person_info['name']},\n\nThis is a reminder for you to bring snacks for the lab meeting on {presentation_day}."
+                message = f"Hello {snack_person_info['name']},\n\nThis is a reminder for you to bring snacks for the lab meeting on {presentation_day}." + SERVICE_SIGNATURE
                 self.email_notifier.send_email([snack_person_info['email']], subject, message)
 
             # Update the duty tracker
             self.update_duty_tracker('snacks', next_snacks_id)
 
 if __name__ == "__main__":
-    presentation_day = "Thursday"
+    presentation_day = "Friday"
     presentation_time = "2:00 PM"
-    maintenance_day = "Thursday"
+    maintenance_day = "Friday"
 
     system = LabNotificationSystem(presentation_day, presentation_time, maintenance_day)
     system.run()
