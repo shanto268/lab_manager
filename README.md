@@ -15,13 +15,26 @@ This project serves as a lab manager for the [Levenson-Falk Lab](https://dornsif
 ## Setup and Operation
 
 1. **Local Setup**:
+
    - Install dependencies from `requirements.txt`.
    - Set up environment variables for Gmail, Slack, and Google Calendar credentials.
-   - Use `client_secret.json` and `token.pickle` for Google Calendar API.
+     ```bash
+     export GMAIL_USER=<email>
+     export GMAIL_PASSWORD=<password>
+     export SLACK_TOKEN=<token>
+     export LAB_MEMBERS_INFO=<json file | base64>
+     export GOOGLE_CALENDAR_SERVICE_KEY=<calendar service key | base64>
+     ```
+   - Move/Generate the `token.pickle` for Google Calendar API on the local machine.
 
 2. **PythonAnywhere Setup**:
+
    - Upload the script files to PythonAnywhere.
-   - Set up a scheduled task to run `main.py` daily at 7 AM.
+   - Set up a scheduled task to run `main.py` daily at 7 AM using cron.
+     - Cron file:
+       ```bash
+       0 7 * * * /home/<username>/lfl-lab-manager/venv/bin/python /home/<username>/lfl-lab-manager/main.py
+       ```
    - Ensure `client_secret.json` and `token.pickle` are safely uploaded and handled.
 
 3. **Handling Authentication**:
@@ -33,7 +46,7 @@ This project serves as a lab manager for the [Levenson-Falk Lab](https://dornsif
 
 ## GitHub Actions
 
-The project *can* be configured to use the GitHub Action defined in `.github/workflows/main.yml` to automate reminders.
+The project _can_ be configured to use the GitHub Action defined in `.github/workflows/main.yml` to automate reminders.
 
 ## Security
 

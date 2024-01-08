@@ -1,14 +1,16 @@
 __author__ = "Sadman Ahmed Shanto"
 __email__ = "shanto@usc.edu"
 
+import os
+import pickle
+from datetime import datetime, timedelta
+
+from dateutil.parser import parse
+from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-from datetime import datetime, timedelta
-from dateutil.parser import parse
-import os
-import pickle
-from google.auth.transport.requests import Request
+
 
 class CalendarManager:
     def __init__(self, email_notifier, client_secret_file="client_secret.json", token_file='token.pickle', scopes=['https://www.googleapis.com/auth/calendar']):
@@ -37,16 +39,16 @@ class CalendarManager:
         """Create a calendar event without attendees."""
         time_zone = 'America/Los_Angeles'
         if all_day:
-            # For all-day events, use 'date' instead of 'dateTime'
+            #* For all-day events, use 'date' instead of 'dateTime'
             start = {'date': start_date}
             end = {'date': end_date}
             colorId = "2"
         else:
-            # For timed events, use 'dateTime'
+            #* For timed events, use 'dateTime'
             start = {'dateTime': start_date, 'timeZone': time_zone}
             end = {'dateTime': end_date, 'timeZone': time_zone}
             colorId = "4"
-        # Add location if provided
+        #* Add location if provided
         event_body = {
             'summary': title,
             'description': description,
