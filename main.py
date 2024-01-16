@@ -111,7 +111,7 @@ class LabNotificationSystem:
         print("=====================================")
         self.send_presentation_reminders()
         print("Presentation reminders sent...")
-        # self.send_lab_maintenance_reminders()
+        self.send_lab_maintenance_reminders()
         print("Lab maintenance reminders sent...")
         self.send_lab_snacks_reminders()
         print("Lab snacks reminders sent...")
