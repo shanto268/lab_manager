@@ -107,13 +107,16 @@ class LabNotificationSystem:
     def run(self):
         print("=====================================")
         print("Running the lab notification system...")
+        print(f"Date: {date.today()} | Time: {datetime.now().strftime('%H:%M:%S')} | OS: {os.name}")
         print("=====================================")
         self.send_presentation_reminders()
         print("Presentation reminders sent...")
-        self.send_lab_maintenance_reminders()
+        # self.send_lab_maintenance_reminders()
         print("Lab maintenance reminders sent...")
         self.send_lab_snacks_reminders()
         print("Lab snacks reminders sent...")
+        print("=====================================")
+        print("\n")
 
     def get_next_member(self, members, current_member_id):
         current_index = members.index(next((m for m in members if m['id'] == current_member_id), None))
@@ -137,11 +140,11 @@ class LabNotificationSystem:
         # Check if next week today is a national holiday
         today = today + timedelta(days=7)
         if today in self.us_holidays:
-            self.slack_notifier.send_message('#test-gpt', f"Reminder: No lab meeting next week due to a national holiday - {self.us_holidays.get(today)}")
+            self.slack_notifier.send_message('#general', f"Reminder: No lab meeting next week due to a national holiday - {self.us_holidays.get(today)}")
             return True
         # Check if today is the first presentation day of the month
         elif today.day == self.presentation_day:
-            self.slack_notifier.send_message('#test-gpt', "Reminder: Today is 'Lab Citizen Day'")
+            self.slack_notifier.send_message('#general', "Reminder: Today is 'Lab Citizen Day'")
             return True
         # All else case
         else:
@@ -167,11 +170,11 @@ class LabNotificationSystem:
                 if is_group_presentation:
                     for presenter_info in presenters:
                         subject = "LFL Lab Meeting Presentation"
-                        message = f"Hello {presenter_info['name']},\n\nYou are scheduled to present at next week's lab meeting." + MEETING_SIGNATURE
+                        message = f"Hello {presenter_info['name']},\n\nYou are scheduled to present at next week's lab meeting - {pres_date}." + MEETING_SIGNATURE
                         self.email_notifier.send_email([presenter_info['email']], subject, message)
 
                     # Slack notification for group presentation
-                    self.slack_notifier.send_message('#test-gpt', "This week's presentation will be given by our undergrads.")
+                    self.slack_notifier.send_message('#general', "Next week's presentation will be given by our undergrads.")
 
                     # Create Google Calendar event for group presentation
                     self.calendar_manager.create_timed_event(
@@ -185,11 +188,11 @@ class LabNotificationSystem:
                 else:
                     presenter_info = presenters[0]  # Only one presenter
                     subject = "LFL Lab Meeting Presentation"
-                    message = f"Hello {presenter_info['name']},\n\nYou are scheduled to present at next week's lab meeting." + MEETING_SIGNATURE
+                    message = f"Hello {presenter_info['name']},\n\nYou are scheduled to present at next week's lab meeting - {pres_date}." + MEETING_SIGNATURE
                     self.email_notifier.send_email([presenter_info['email']], subject, message)
 
                     # Slack notification for individual presentation
-                    self.slack_notifier.send_message('#test-gpt', f"This week's presentation will be given by {presenter_info['name']}.")
+                    self.slack_notifier.send_message('#general', f"Next week's presentation will be given by {presenter_info['name']}.")
 
                     # Create Google Calendar event for individual presentation
                     self.calendar_manager.create_timed_event(
@@ -296,7 +299,7 @@ class LabNotificationSystem:
 if __name__ == "__main__":
     presentation_day = "Monday"
     presentation_time = "2:00 PM"
-    maintenance_day = "Monday"
+    maintenance_day = "Friday"
     location = "SSC 319"
 
     try:
