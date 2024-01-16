@@ -1,15 +1,22 @@
-import os
-import json
-import subprocess
-import holidays
+"""
+This script is used to send reminders to lab members about their duties.
+The script is run every day at 7:00 AM PST.
+"""
 import base64
-
+import json
+import os
+import subprocess
 from datetime import date, datetime, timedelta
+
+import holidays
+
+from calendar_manager import CalendarManager
 from config_loader import ConfigLoader
 from email_notifier import EmailNotifier
 from slack_notifier import SlackNotifier
-from calendar_manager import CalendarManager
 
+__author__ = "Sadman Ahmed Shanto"
+__email__ = "shanto@usc.edu"
 
 MEETING_SIGNATURE = "\n\nLooking Forward to it 🤩,\nLFL Bot."
 SERVICE_SIGNATURE = "\n\nThank you for your service 🫡,\nLFL Bot."
@@ -78,7 +85,7 @@ def load_google_service_key(file_path):
             raise ValueError(f"Failed to load Google service key: {e}")
 
 class LabNotificationSystem:
-    def __init__(self, presentation_day, presentation_time, maintenance_day):
+    def __init__(self, presentation_day, presentation_time, maintenance_day, location):
         self.lab_members = ConfigLoader('lab_members.json').load_config()
         self.gmail_username = os.environ.get('GMAIL_USERNAME')
         self.gmail_password = os.environ.get('GMAIL_PASSWORD')
@@ -89,6 +96,7 @@ class LabNotificationSystem:
         self.maintenance_day = chosen_day(maintenance_day)
         self.presentation_day = chosen_day(presentation_day)
         self.presentation_time = presentation_time
+        self.location = location
         self.us_holidays = holidays.US()
 
 
@@ -97,9 +105,15 @@ class LabNotificationSystem:
         self.slack_notifier = SlackNotifier(self.slack_token)
 
     def run(self):
+        print("=====================================")
+        print("Running the lab notification system...")
+        print("=====================================")
         self.send_presentation_reminders()
+        print("Presentation reminders sent...")
         self.send_lab_maintenance_reminders()
+        print("Lab maintenance reminders sent...")
         self.send_lab_snacks_reminders()
+        print("Lab snacks reminders sent...")
 
     def get_next_member(self, members, current_member_id):
         current_index = members.index(next((m for m in members if m['id'] == current_member_id), None))
@@ -112,7 +126,7 @@ class LabNotificationSystem:
         tracker[duty_type] = next_member_id
         with open('duty_tracker.json', 'w') as file:
             json.dump(tracker, file, indent=4)
-        self.commit_and_push_changes()
+        #self.commit_and_push_changes()
 
     def commit_and_push_changes(self):
         subprocess.run(['git', 'add', 'duty_tracker.json'], check=True)
@@ -120,9 +134,10 @@ class LabNotificationSystem:
         subprocess.run(['git', 'push'], check=True)
 
     def no_meeting(self, today):
-        # Check if today is a national holiday
+        # Check if next week today is a national holiday
+        today = today + timedelta(days=7)
         if today in self.us_holidays:
-            self.slack_notifier.send_message('#test-gpt', f"Reminder: No lab meeting today due to a national holiday - {self.us_holidays.get(today)}")
+            self.slack_notifier.send_message('#test-gpt', f"Reminder: No lab meeting next week due to a national holiday - {self.us_holidays.get(today)}")
             return True
         # Check if today is the first presentation day of the month
         elif today.day == self.presentation_day:
@@ -181,7 +196,8 @@ class LabNotificationSystem:
                         title="Group Meeting Presentation by " + presenter_info['name'],
                         date=pres_date,
                         start_time_str=self.presentation_time,
-                        attendees=[member['email'] for member in presenters]
+                        attendees=[member['email'] for member in presenters],
+                        location=self.location
                     )
 
                 # Update the duty tracker
@@ -252,6 +268,7 @@ class LabNotificationSystem:
                     start_date=start_date,
                     end_date=end_date,
                     attendees=[maintainer_info['email']],
+                    location=self.location,
                     all_day=True
                 )
 
@@ -259,7 +276,6 @@ class LabNotificationSystem:
             self.update_duty_tracker('maintenance', next_maintenance_id)
 
     def send_lab_snacks_reminders(self):
-        print("Today's weekday: ", datetime.today().weekday())
         if datetime.today().weekday() == self.presentation_day - 1:
             print("Sending lab snacks reminders...")
             tracker = self.load_duty_tracker()
@@ -278,9 +294,16 @@ class LabNotificationSystem:
             self.update_duty_tracker('snacks', next_snacks_id)
 
 if __name__ == "__main__":
-    presentation_day = "Friday"
+    presentation_day = "Monday"
     presentation_time = "2:00 PM"
-    maintenance_day = "Friday"
+    maintenance_day = "Monday"
+    location = "SSC 319"
 
-    system = LabNotificationSystem(presentation_day, presentation_time, maintenance_day)
-    system.run()
+    try:
+        system = LabNotificationSystem(presentation_day, presentation_time, maintenance_day, location)
+        system.run()
+    # except capture the error message and send an email to __email__
+    except Exception as e:
+        print("An error occurred: ", e)
+        system.email_notifier.send_email([__email__], "Lab Notification System Error", str(e))
+        raise e
