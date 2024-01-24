@@ -25,3 +25,8 @@ LOG_FILE=/Users/shanto/LFL/lab_manager/cron.log
 cd $DIR
 # run the python script and redirect output to the log file
 $PYTHON_BIN $PYTHON_SCRIPT >>$LOG_FILE 2>&1
+
+# Marker system implementation
+MARKER_PATH="/Users/shanto/LFL/lab_manager/markers/marker_$(date +%Y-%m-%d).txt"
+touch "$MARKER_PATH"
+

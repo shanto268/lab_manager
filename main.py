@@ -32,7 +32,7 @@ def create_step(reminder):
     return "{} {}\n".format(check_symbol, reminder)
 
 def get_header(name, date_maintenance):
-    header = "Hi {},\n\nThis is a reminder that tomorrow ({}) is your turn to do the LFL Lab Maintenance. Please refer to the following checklist.\n\n".format(name, date_maintenance)
+    header = "Hi {},\n\nThis is a reminder that next week it is your turn to do the LFL Lab Maintenance. Please refer to the following checklist.\n\n".format(name)
     return header
 
 def get_signature(bot_name="LFL Bot"):
@@ -110,11 +110,11 @@ class LabNotificationSystem:
         print(f"Date: {date.today()} | Time: {datetime.now().strftime('%H:%M:%S')} | OS: {os.name}")
         print("=====================================")
         self.send_presentation_reminders()
-        print("Presentation reminders sent...")
+        print("Handling Presentation reminders...")
         self.send_lab_maintenance_reminders()
-        print("Lab maintenance reminders sent...")
+        print("Handling Lab maintenance reminders...")
         self.send_lab_snacks_reminders()
-        print("Lab snacks reminders sent...")
+        print("Handling Lab snacks reminders...")
         print("=====================================")
         print("\n")
 
@@ -140,11 +140,11 @@ class LabNotificationSystem:
         # Check if next week today is a national holiday
         today = today + timedelta(days=7)
         if today in self.us_holidays:
-            self.slack_notifier.send_message('#general', f"Reminder: No lab meeting next week due to a national holiday - {self.us_holidays.get(today)}")
+            self.slack_notifier.send_message('#lfl-general', f"Reminder: No lab meeting next week due to a national holiday - {self.us_holidays.get(today)}")
             return True
         # Check if today is the first presentation day of the month
         elif today.day == self.presentation_day:
-            self.slack_notifier.send_message('#general', "Reminder: Today is 'Lab Citizen Day'")
+            self.slack_notifier.send_message('#lfl-general', "Reminder: Today is 'Lab Citizen Day'")
             return True
         # All else case
         else:
@@ -168,13 +168,14 @@ class LabNotificationSystem:
 
                 # Handle group presentation for undergraduates
                 if is_group_presentation:
+                    print("Group Presentation by undergrads")
                     for presenter_info in presenters:
                         subject = "LFL Lab Meeting Presentation"
                         message = f"Hello {presenter_info['name']},\n\nYou are scheduled to present at next week's lab meeting - {pres_date}." + MEETING_SIGNATURE
                         self.email_notifier.send_email([presenter_info['email']], subject, message)
 
                     # Slack notification for group presentation
-                    self.slack_notifier.send_message('#general', "Next week's presentation will be given by our undergrads.")
+                    # self.slack_notifier.send_message('#general', "Next week's presentation will be given by our undergrads.")
 
                     # Create Google Calendar event for group presentation
                     self.calendar_manager.create_timed_event(
@@ -187,12 +188,13 @@ class LabNotificationSystem:
                 # Handle individual presentation
                 else:
                     presenter_info = presenters[0]  # Only one presenter
+                    print(f"Group Presentation by {presenter_info['name']}")
                     subject = "LFL Lab Meeting Presentation"
                     message = f"Hello {presenter_info['name']},\n\nYou are scheduled to present at next week's lab meeting - {pres_date}." + MEETING_SIGNATURE
                     self.email_notifier.send_email([presenter_info['email']], subject, message)
 
                     # Slack notification for individual presentation
-                    self.slack_notifier.send_message('#general', f"Next week's presentation will be given by {presenter_info['name']}.")
+                    # self.slack_notifier.send_message('#general', f"Next week's presentation will be given by {presenter_info['name']}.")
 
                     # Create Google Calendar event for individual presentation
                     self.calendar_manager.create_timed_event(
@@ -260,6 +262,7 @@ class LabNotificationSystem:
             if maintainer_info:
                 subject = "Lab Maintenance Reminder"
                 message = maintenance_message
+                print(f"Maintenance week by - {maintainer_info['name']}")
                 self.email_notifier.send_email([maintainer_info['email']], subject, message)
 
                 # Create a calendar event for the maintenance week
@@ -293,6 +296,7 @@ class LabNotificationSystem:
                 message = f"Hello {snack_person_info['name']},\n\nThis is a reminder for you to bring snacks for the lab meeting on {presentation_day}." + SERVICE_SIGNATURE
                 self.email_notifier.send_email([snack_person_info['email']], subject, message)
 
+            print("Snacks bought by - ", snack_person_info['name'])
             # Update the duty tracker
             self.update_duty_tracker('snacks', next_snacks_id)
 
@@ -307,6 +311,7 @@ if __name__ == "__main__":
         system.run()
     # except capture the error message and send an email to __email__
     except Exception as e:
+        system = LabNotificationSystem(presentation_day, presentation_time, maintenance_day, location)
         print("An error occurred: ", e)
         system.email_notifier.send_email([__email__], "Lab Notification System Error", str(e))
         raise e
