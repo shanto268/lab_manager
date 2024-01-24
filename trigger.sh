@@ -1,6 +1,16 @@
 #!/bin/bash
 set -e
 
+# notification function
+notify() {
+    GEN_NOTIFY_POVER="/Users/shanto/Programming/bin/generalNotification.py"
+    PYTHON_EXE="/Users/shanto/anaconda3/bin/python"
+    $PYTHON_EXE $GEN_NOTIFY_POVER "$1" "$2"
+    tput bel
+    local notification_command="display notification \"$2\" with title \"$1\""
+    osascript -e "$notification_command"
+}
+
 # Source secrets
 if [ -f "/Users/shanto/LFL/lab_manager/.secrets" ]; then
     source "/Users/shanto/LFL/lab_manager/.secrets"
@@ -30,3 +40,9 @@ $PYTHON_BIN $PYTHON_SCRIPT >>$LOG_FILE 2>&1
 MARKER_PATH="/Users/shanto/LFL/lab_manager/markers/marker_$(date +%Y-%m-%d).txt"
 touch "$MARKER_PATH"
 
+# Check if the script ran successfully
+if [ $? -eq 0 ]; then
+    notify "LFL Lab Manager" "Reminders and notifications sent."
+else
+    notify "LFL Lab Manager" "Script execution failed."
+fi

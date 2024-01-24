@@ -16,24 +16,30 @@ class CalendarManager:
     def __init__(self, email_notifier, client_secret_file="client_secret.json", token_file='token.pickle', scopes=['https://www.googleapis.com/auth/calendar']):
         self.credentials = None
         self.email_notifier = email_notifier
+        self.client_secret_file = client_secret_file
+        self.token_file = token_file
+        self.scopes = scopes
+        
         if os.path.exists(token_file):
             with open(token_file, 'rb') as token:
                 self.credentials = pickle.load(token)
 
         # If there are no valid credentials available, let the user log in.
+        self.__athenticate_via_browser() #old method
+    
+    def __athenticate_via_browser(self):
         if not self.credentials or not self.credentials.valid:
             if self.credentials and self.credentials.expired and self.credentials.refresh_token:
                 self.credentials.refresh(Request())
             else:
                 self.email_notifier.send_email([__email__], 'Re-authentication Required', 'Please re-authenticate your app.')
-                flow = InstalledAppFlow.from_client_secrets_file(client_secret_file, scopes=scopes)
-                self.credentials = flow.run_local_server(port=0)
-            # Save the credentials for the next run
-            with open(token_file, 'wb') as token:
-                pickle.dump(self.credentials, token)
-
-
-        self.service = build('calendar', 'v3', credentials=self.credentials)
+                self.initiate_new_authentication_flow()
+    
+    def initiate_new_authentication_flow(self):
+        flow = InstalledAppFlow.from_client_secrets_file(self.client_secret_file, scopes=self.scopes)
+        self.credentials = flow.run_local_server(port=0)
+        with open(self.token_file, 'wb') as token:
+            pickle.dump(self.credentials, token)
 
     def create_event(self, title, description, start_date, end_date, attendees, all_day=False, location="SSC 319"):
         """Create a calendar event without attendees."""
