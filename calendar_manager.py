@@ -26,6 +26,8 @@ class CalendarManager:
 
         # If there are no valid credentials available, let the user log in.
         self.__athenticate_via_browser() #old method
+
+        self.service = build('calendar', 'v3', credentials=self.credentials)
     
     def __athenticate_via_browser(self):
         if not self.credentials or not self.credentials.valid:
