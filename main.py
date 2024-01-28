@@ -282,7 +282,8 @@ class LabNotificationSystem:
             self.update_duty_tracker('maintenance', next_maintenance_id)
 
     def send_lab_snacks_reminders(self):
-        if datetime.today().weekday() == self.presentation_day - 1:
+        # Send reminders on the day before the presentation including edgecase of sunday
+        if datetime.today().weekday() == self.presentation_day - 1 or (datetime.today().weekday() == 6 and self.presentation_day == 0):
             print("Sending lab snacks reminders...")
             tracker = self.load_duty_tracker()
             current_snacks_id = tracker.get('snacks', None)
