@@ -35,13 +35,14 @@ LOG_FILE=/Users/shanto/LFL/lab_manager/cron.log
 cd $DIR
 # run the python script and redirect output to the log file
 $PYTHON_BIN $PYTHON_SCRIPT >>$LOG_FILE 2>&1
+EXIT_STATUS=$?
 
 # Marker system implementation
 MARKER_PATH="/Users/shanto/LFL/lab_manager/markers/marker_$(date +%Y-%m-%d).txt"
 touch "$MARKER_PATH"
 
 # Check if the script ran successfully
-if [ $? -eq 0 ]; then
+if [ $EXIT_STATUS -eq 0 ]; then
     notify "LFL Lab Manager" "Reminders and notifications sent."
 else
     notify "LFL Lab Manager" "Script execution failed."

@@ -6,6 +6,8 @@ import base64
 import json
 import os
 import subprocess
+import sys
+import traceback
 from datetime import date, datetime, timedelta
 
 import holidays
@@ -307,12 +309,18 @@ if __name__ == "__main__":
     maintenance_day = "Friday"
     location = "SSC 319"
 
+    system = None
     try:
         system = LabNotificationSystem(presentation_day, presentation_time, maintenance_day, location)
-        system.run()
-    # except capture the error message and send an email to __email__
     except Exception as e:
-        system = LabNotificationSystem(presentation_day, presentation_time, maintenance_day, location)
-        print("An error occurred: ", e)
-        system.email_notifier.send_email([__email__], "Lab Notification System Error", str(e))
-        raise e
+        if system and system.email_notifier:
+            system.email_notifier.send_email([__email__], "Lab Notification System Error", str(e))
+        print(f"Caught exception during initialization: {e}")
+        sys.exit(1)
+    try:
+        system.run()
+    except Exception as e:
+        if system and system.email_notifier:
+            system.email_notifier.send_email([__email__], "Lab Notification System Error", str(e))
+        print(f"Caught exception during execution: {e}")
+        sys.exit(1)
