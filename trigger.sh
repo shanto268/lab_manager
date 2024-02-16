@@ -33,8 +33,10 @@ PYTHON_SCRIPT=/Users/shanto/LFL/lab_manager/main.py
 LOG_FILE=/Users/shanto/LFL/lab_manager/cron.log
 # change directory to the directory of the python script
 cd $DIR
-# run the python script and redirect output to the log file
-$PYTHON_BIN $PYTHON_SCRIPT >>$LOG_FILE 2>&1
+# Run the Python script and redirect output to a log file
+{
+    $PYTHON_BIN $PYTHON_SCRIPT >>$LOG_FILE 2>&1
+} || true
 EXIT_STATUS=$?
 
 # Marker system implementation
@@ -44,6 +46,8 @@ touch "$MARKER_PATH"
 # Check if the script ran successfully
 if [ $EXIT_STATUS -eq 0 ]; then
     notify "LFL Lab Manager" "Reminders and notifications sent."
+elif [ $EXIT_STATUS -eq 1 ]; then
+    notify "LFL Lab Manager" "Token expired or revoked."
 else
     notify "LFL Lab Manager" "Script execution failed."
 fi

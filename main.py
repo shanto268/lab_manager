@@ -86,6 +86,9 @@ def load_google_service_key(file_path):
         except Exception as e:
             raise ValueError(f"Failed to load Google service key: {e}")
 
+
+
+
 class LabNotificationSystem:
     def __init__(self, presentation_day, presentation_time, maintenance_day, location):
         self.lab_members = ConfigLoader('lab_members.json').load_config()
@@ -303,6 +306,16 @@ class LabNotificationSystem:
             # Update the duty tracker
             self.update_duty_tracker('snacks', next_snacks_id)
 
+def alert_developer(e):
+    gmail_username = os.environ.get('GMAIL_USERNAME')
+    gmail_password = os.environ.get('GMAIL_PASSWORD')
+    email_notifier = EmailNotifier(gmail_username, gmail_password)
+    token_error_msg = "('invalid_grant: Token has been expired or revoked.', {'error': 'invalid_grant', 'error_description': 'Token has been expired or revoked.'})"
+    resolution_msg = f"If error message is\n`{token_error_msg}`\nresoultion is:\n\n1) Delete the `token.pickle` file\n2) Run the script again"
+    bar = "=" * 30
+    content = f"System Generated Error Message:\n{bar}\n\n{str(e)}\n\nResolutions:\n{bar}\n\n{resolution_msg}"
+    email_notifier.send_email([__email__], "Lab Notification System Error", content)
+
 if __name__ == "__main__":
     presentation_day = "Monday"
     presentation_time = "2:00 PM"
@@ -313,14 +326,12 @@ if __name__ == "__main__":
     try:
         system = LabNotificationSystem(presentation_day, presentation_time, maintenance_day, location)
     except Exception as e:
-        if system and system.email_notifier:
-            system.email_notifier.send_email([__email__], "Lab Notification System Error", str(e))
         print(f"Caught exception during initialization: {e}")
+        alert_developer(e)
         sys.exit(1)
     try:
         system.run()
     except Exception as e:
-        if system and system.email_notifier:
-            system.email_notifier.send_email([__email__], "Lab Notification System Error", str(e))
         print(f"Caught exception during execution: {e}")
+        alert_developer(e)
         sys.exit(1)
