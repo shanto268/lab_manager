@@ -2,6 +2,8 @@ import os
 import pickle
 import re
 from datetime import datetime
+from itertools import groupby
+from operator import itemgetter
 
 import requests
 from bs4 import BeautifulSoup
@@ -53,7 +55,7 @@ def create_calendar_events(pres_list):
         event_body = {
             'summary': pres['title'],
             'location': pres['location'],
-            'description': f"Presented by: {pres['name']}\n\nAbstract: {pres['abstract']}",
+            'description': f"Presented by: {pres['name']}\n\nAbstract: {pres['abstract']}\n\nURL: {pres['url']}",
             'start': {
                 'dateTime': start_time.isoformat(),
                 'timeZone': MM_TIMEZONE,
@@ -108,6 +110,7 @@ def create_pres_list_from_aps(url):
         "time_begin": time_begin,
         "time_end": time_end,
         "abstract": abstract_text.strip(),
+        "url": url,
         "location": location
     })
 
@@ -134,6 +137,35 @@ def process_aps_urls(url_list):
     
     return all_pres_details
 
+def print_all_session_details_v0(url):
+    pres_list = create_pres_list_from_aps(url)
+    pres_list.sort(key=lambda x: datetime.strptime(x['pres_date'], '%m/%d/%Y'))  # assuming date is in 'mm/dd/yyyy' format
+
+    for pres in pres_list:
+        session_id = url.split('/')[-1]
+        print(f"{session_id:<10} | Room: {pres['location']:<10} | Time: {pres['pres_date']} ({pres['time_begin']} - {pres['time_end']})")
+
+def print_all_session_details(url_list):
+    all_pres = []
+    for url in url_list:
+        all_pres.extend(create_pres_list_from_aps(url))
+
+    all_pres.sort(key=lambda x: (datetime.strptime(x['pres_date'], '%m/%d/%Y'), x['location'], x['time_begin'], x['time_end']))
+
+    for key, group in groupby(all_pres, key=itemgetter('pres_date', 'location', 'time_begin', 'time_end')):
+        session_ids = [session['url'].split('/')[-1] for session in group]
+        print(f"{', '.join(session_ids):<10} | Room: {key[1]:<10} | Time: {key[0]} ({key[2]} - {key[3]})")
+
+def delete_all_created_calendar_entries():
+    service = authenticate_google_calendar()
+    events_result = service.events().list(calendarId=MM_calendar_ID, timeMin=datetime.now().isoformat()).execute()
+    events = events_result.get('items', [])
+    if not events:
+        print('No upcoming events found.')
+    for event in events:
+        print(f"Deleting event: {event['summary']}")
+        service.events().delete(calendarId=MM_calendar_ID, eventId=event['id']).execute()
+
 if __name__ == "__main__":
     # read calendar ID from .env
     load_dotenv()
@@ -153,4 +185,5 @@ if __name__ == "__main__":
         "https://meetings.aps.org/Meeting/MAR24/Session/S50.1",
     ]
     all_pres_details = process_aps_urls(url_list)
-    create_calendar_events(all_pres_details)
+    #create_calendar_events(all_pres_details)
+    print_all_session_details(url_list)
