@@ -3,6 +3,7 @@ This script is used to send reminders to lab members about their duties.
 The script is run every day at 7:00 AM PST.
 """
 import base64
+import calendar
 import json
 import os
 import subprocess
@@ -114,8 +115,18 @@ class LabNotificationSystem:
         print("Running the lab notification system...")
         print(f"Date: {date.today()} | Time: {datetime.now().strftime('%H:%M:%S')} | OS: {os.name}")
         print("=====================================")
-        self.send_presentation_reminders()
         print("Handling Presentation reminders...")
+
+        today = date.today()
+        next_monday = today + datetime.timedelta(days=(7 - today.weekday() or 7))
+        lab_citizen_day_td_link = "https://uscedu-my.sharepoint.com/personal/lflab_usc_edu/_layouts/OneNote.aspx?id=%2Fpersonal%2Flflab_usc_edu%2FDocuments%2FGeneral&wd=target%28Lab%20Maintenance.one%7C59785966-4BD6-42DF-AF23-31DAD7637C01%2FLab%20Citizen%20Day%20To%20Dos%7CB0FCAE6E-B476-DD4E-ABF2-3316A183AF08%2F%29onenote:https://uscedu-my.sharepoint.com/personal/lflab_usc_edu/Documents/General/Lab%20Maintenance.one#Lab%20Citizen%20Day%20To%20Dos&section-id={59785966-4BD6-42DF-AF23-31DAD7637C01}&page-id={B0FCAE6E-B476-DD4E-ABF2-3316A183AF08}&end"
+
+        # Check if next Monday is the first Monday of the next month
+        if (next_monday.month != today.month) and (next_monday.day <= 7):
+            self.slack_notifier.send_message('#lfl-general', f"Reminder: No lab meeting next week, we will have a Lab Citizen Day on {next_monday}. Don't know what to do?\nnRefer to\n{lab_citizen_day_td_link}")
+        else:
+            self.send_presentation_reminders()
+
         self.send_lab_maintenance_reminders()
         print("Handling Lab maintenance reminders...")
         self.send_lab_snacks_reminders()
@@ -241,7 +252,7 @@ class LabNotificationSystem:
 
         ln2_instruction = "Please schedule a Liquid Nitrogen Fill Up with Jivin (jseward@usc.edu) and refill our tank"
 
-        instructions = [ln2_instruction, "Check Lab Inventory: napkins, water filters, gloves, masks, printing supply, compressed air", "Check Chemical Inventory", "Assess Water Filter Status", "Check cooling water temperature and pressure", "Fill up traps and dewars with LN2", "General Cleanup of the Lab (call people out if needed)","Monitor waste labels and complete them if they are missing any information", "Issue a Waste Pick Up Request with EH&S if Accumulation Date on a label is almost 9 months or if you need to dispose of the waste ASAP", "Version Control and Back Up Code Base on GitHub"]
+        instructions = [ln2_instruction, "Purchase any outstanding item left on the Purchasing Wish list", "Check Lab Inventory: napkins, water filters, gloves, masks, printing supply, compressed air", "Check Chemical Inventory", "Assess Water Filter Status", "Check cooling water temperature and pressure", "Fill up traps and dewars with LN2", "General Cleanup of the Lab (call people out if needed)","Monitor waste labels and complete them if they are missing any information", "Issue a Waste Pick Up Request with EH&S if Accumulation Date on a label is almost 9 months or if you need to dispose of the waste ASAP", "Version Control and Back Up Code Base on GitHub"]
 
         reminders = ["🌳 Wear O2 monitor while doing LN2 fill up","🚪 Keep Back Room Door open while doing LN2 fill up","🪤 Don't position yourself such that you are trapped by the dewar","👖 Wear full pants on Lab Maintenance Day", "🚫 Don't reuse gloves", "🦠 Don't touch non-contaminated items with gloves", "🧤 Wear thermal gloves when working with LN2", "🥼🥽 Wear safety coat and goggles", "👥 Use the buddy system if not comfortable doing a task alone"]
 
