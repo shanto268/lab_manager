@@ -118,12 +118,27 @@ class LabNotificationSystem:
         print("Handling Presentation reminders...")
 
         today = date.today()
-        next_monday = today + datetime.timedelta(days=(7 - today.weekday() or 7))
+        next_monday = today + timedelta(days=(7 - today.weekday() or 7))
         lab_citizen_day_td_link = "https://uscedu-my.sharepoint.com/personal/lflab_usc_edu/_layouts/OneNote.aspx?id=%2Fpersonal%2Flflab_usc_edu%2FDocuments%2FGeneral&wd=target%28Lab%20Maintenance.one%7C59785966-4BD6-42DF-AF23-31DAD7637C01%2FLab%20Citizen%20Day%20To%20Dos%7CB0FCAE6E-B476-DD4E-ABF2-3316A183AF08%2F%29onenote:https://uscedu-my.sharepoint.com/personal/lflab_usc_edu/Documents/General/Lab%20Maintenance.one#Lab%20Citizen%20Day%20To%20Dos&section-id={59785966-4BD6-42DF-AF23-31DAD7637C01}&page-id={B0FCAE6E-B476-DD4E-ABF2-3316A183AF08}&end"
+
+        # Check if today is the presentation day
+        if today.weekday() == self.presentation_day:
+            # Check if next Monday is the first Monday of the next month
+            if (next_monday.month != today.month) and (next_monday.day <= 7):
+                self.slack_notifier.send_message(
+                    '#lfl-general', 
+                    f"Reminder: No lab meeting next week, we will have a Lab Citizen Day on {next_monday}. Don't know what to do?\nRefer to\n{lab_citizen_day_td_link}"
+                )
+            else:
+                self.send_presentation_reminders()
+        else:
+            self.send_presentation_reminders()
 
         # Check if next Monday is the first Monday of the next month
         if (next_monday.month != today.month) and (next_monday.day <= 7):
-            self.slack_notifier.send_message('#lfl-general', f"Reminder: No lab meeting next week, we will have a Lab Citizen Day on {next_monday}. Don't know what to do?\nnRefer to\n{lab_citizen_day_td_link}")
+            # self.slack_notifier.send_message('#lfl-general', f"Reminder: No lab meeting next week, we will have a Lab Citizen Day on {next_monday}. Don't know what to do?\nRefer to\n{lab_citizen_day_td_link}")
+            print("this is running")
+            pass
         else:
             self.send_presentation_reminders()
 
