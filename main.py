@@ -116,36 +116,11 @@ class LabNotificationSystem:
         print(f"Date: {date.today()} | Time: {datetime.now().strftime('%H:%M:%S')} | OS: {os.name}")
         print("=====================================")
         print("Handling Presentation reminders...")
-
-        today = date.today()
-        next_monday = today + timedelta(days=(7 - today.weekday() or 7))
-        lab_citizen_day_td_link = "https://uscedu-my.sharepoint.com/personal/lflab_usc_edu/_layouts/OneNote.aspx?id=%2Fpersonal%2Flflab_usc_edu%2FDocuments%2FGeneral&wd=target%28Lab%20Maintenance.one%7C59785966-4BD6-42DF-AF23-31DAD7637C01%2FLab%20Citizen%20Day%20To%20Dos%7CB0FCAE6E-B476-DD4E-ABF2-3316A183AF08%2F%29onenote:https://uscedu-my.sharepoint.com/personal/lflab_usc_edu/Documents/General/Lab%20Maintenance.one#Lab%20Citizen%20Day%20To%20Dos&section-id={59785966-4BD6-42DF-AF23-31DAD7637C01}&page-id={B0FCAE6E-B476-DD4E-ABF2-3316A183AF08}&end"
-
-        # Check if today is the presentation day
-        if today.weekday() == self.presentation_day:
-            # Check if next Monday is the first Monday of the next month
-            if (next_monday.month != today.month) and (next_monday.day <= 7):
-                self.slack_notifier.send_message(
-                    '#lfl-general', 
-                    f"Reminder: No lab meeting next week, we will have a Lab Citizen Day on {next_monday}. Don't know what to do?\nRefer to\n{lab_citizen_day_td_link}"
-                )
-            else:
-                self.send_presentation_reminders()
-        else:
-            self.send_presentation_reminders()
-
-        # Check if next Monday is the first Monday of the next month
-        if (next_monday.month != today.month) and (next_monday.day <= 7):
-            # self.slack_notifier.send_message('#lfl-general', f"Reminder: No lab meeting next week, we will have a Lab Citizen Day on {next_monday}. Don't know what to do?\nRefer to\n{lab_citizen_day_td_link}")
-            print("this is running")
-            pass
-        else:
-            self.send_presentation_reminders()
-
-        self.send_lab_maintenance_reminders()
+        self.send_presentation_reminders()
         print("Handling Lab maintenance reminders...")
-        self.send_lab_snacks_reminders()
+        self.send_lab_maintenance_reminders()
         print("Handling Lab snacks reminders...")
+        self.send_lab_snacks_reminders()
         print("=====================================")
         print("\n")
 
@@ -167,7 +142,7 @@ class LabNotificationSystem:
         subprocess.run(['git', 'commit', '-m', 'Update duty tracker'], check=True)
         subprocess.run(['git', 'push'], check=True)
 
-    def no_meeting(self, today):
+    def is_there_meeting_next_week(self, today):
         # Check if next week today is a national holiday
         today = today + timedelta(days=7)
         if today in self.us_holidays:
@@ -181,67 +156,112 @@ class LabNotificationSystem:
         else:
             return False
 
+    def holiday_next_week(self):
+        # Check if next week today is a national holiday
+        next_week = datetime.today() + timedelta(days=7)
+        if next_week in self.us_holidays:
+            self.slack_notifier.send_message('#lfl-general', f"Reminder: No lab meeting next week due to a national holiday - {self.us_holidays.get(next_week)}")
+            return True
+        else:
+            return False
+
     def send_presentation_reminders(self):
+        today = date.today()
+        next_monday = today + timedelta(days=(7 - today.weekday() or 7))
+        lab_citizen_day_td_link = os.environ.get("ONENOTE_LCD")
+
+        # Check if today is the presentation day
+        if today.weekday() == self.presentation_day:
+            # Check if next Monday is the first Monday of the next month
+            if (next_monday.month != today.month) and (next_monday.day <= 7):
+                self.slack_notifier.send_message(
+                    '#lfl-general',
+                    f"Reminder: No lab meeting next week, we will have a Lab Citizen Day on {next_monday}. Don't know what to do?\nRefer to\n{lab_citizen_day_td_link}"
+                )
+
+                pres_date = today + timedelta(days=7)
+
+                try:
+                    self.calendar_manager.create_timed_event(
+                        title="Lab Citizen Day",
+                        date=pres_date,
+                        start_time_str=self.presentation_time,
+                        attendees=self.get_all_member_emails(),
+                        location=self.location,
+                    )
+                except Exception as e:
+                    print(f"Error creating Lab Citizen Day event: {e}")
+            else:
+                self.send_presentation_reminder_email()
+        else:
+            print("No presentation reminders today")
+    
+    def send_presentation_reminder_email(self):
         today = datetime.today()
         tracker = self.load_duty_tracker()
 
-        if today.weekday() == self.presentation_day:  
-            if self.no_meeting(today):
-                pass
-            else:
-                print("Sending presentation reminders...")
-                print("tracker: ", tracker)
-                current_presenter_id = tracker.get('presentation', None)
-                presenters, next_presenter_id, is_group_presentation = self.get_next_presenter(current_presenter_id)
+        if self.holiday_next_week():
+            print("No lab meeting next week due to a national holiday")
+        else:
+            print("Sending presentation reminders...")
+            print("tracker: ", tracker)
+            current_presenter_id = tracker.get('presentation', None)
+            presenters, next_presenter_id, is_group_presentation = self.get_next_presenter(current_presenter_id)
 
-                pres_date = today + timedelta(days=7)
-                pres_date = pres_date
+            pres_date = today + timedelta(days=7)
+            pres_date = pres_date
 
-                # Handle group presentation for undergraduates
-                if is_group_presentation:
-                    print("Group Presentation by undergrads")
-                    for presenter_info in presenters:
-                        subject = "LFL Lab Meeting Presentation"
-                        message = f"Hello {presenter_info['name']},\n\nYou are scheduled to present at next week's lab meeting - {pres_date}." + MEETING_SIGNATURE
-                        self.email_notifier.send_email([presenter_info['email']], subject, message)
-
-                    # Slack notification for group presentation
-                    # self.slack_notifier.send_message('#general', "Next week's presentation will be given by our undergrads.")
-
-                    # Create Google Calendar event for group presentation
-                    self.calendar_manager.create_timed_event(
-                        title="Undergraduate Group Presentation",
-                        date=pres_date,
-                        start_time_str=self.presentation_time,
-                        attendees=[member['email'] for member in presenters]
-                    )
-
-                # Handle individual presentation
-                else:
-                    presenter_info = presenters[0]  # Only one presenter
-                    print(f"Group Presentation by {presenter_info['name']}")
+            # Handle group presentation for undergraduates
+            if is_group_presentation:
+                print("Group Presentation by undergrads")
+                for presenter_info in presenters:
                     subject = "LFL Lab Meeting Presentation"
                     message = f"Hello {presenter_info['name']},\n\nYou are scheduled to present at next week's lab meeting - {pres_date}." + MEETING_SIGNATURE
                     self.email_notifier.send_email([presenter_info['email']], subject, message)
 
-                    # Slack notification for individual presentation
-                    # self.slack_notifier.send_message('#general', f"Next week's presentation will be given by {presenter_info['name']}.")
+                # Create Google Calendar event for group presentation
+                self.calendar_manager.create_timed_event(
+                    title="Undergraduate Group Presentation",
+                    date=pres_date,
+                    start_time_str=self.presentation_time,
+                    attendees=[member['email'] for member in presenters]
+                )
 
-                    # Create Google Calendar event for individual presentation
-                    self.calendar_manager.create_timed_event(
-                        title="Group Meeting Presentation by " + presenter_info['name'],
-                        date=pres_date,
-                        start_time_str=self.presentation_time,
-                        attendees=[member['email'] for member in presenters],
-                        location=self.location
-                    )
+            # Handle individual presentation
+            else:
+                presenter_info = presenters[0]  # Only one presenter
+                print(f"Group Presentation by {presenter_info['name']}")
+                subject = "LFL Lab Meeting Presentation"
+                message = f"Hello {presenter_info['name']},\n\nYou are scheduled to present at next week's lab meeting - {pres_date}." + MEETING_SIGNATURE
+                self.email_notifier.send_email([presenter_info['email']], subject, message)
 
-                # Update the duty tracker
-                self.update_duty_tracker('presentation', next_presenter_id)
+                # Create Google Calendar event for individual presentation
+                self.calendar_manager.create_timed_event(
+                    title="Group Meeting Presentation by " + presenter_info['name'],
+                    date=pres_date,
+                    start_time_str=self.presentation_time,
+                    attendees=[member['email'] for member in presenters],
+                    location=self.location
+                )
+
+            # Update the duty tracker
+            self.update_duty_tracker('presentation', next_presenter_id)
 
     def load_duty_tracker(self):
         with open('duty_tracker.json', 'r') as file:
             return json.load(file)
+
+    def get_all_members(self):
+        """
+        Returns a list of all lab members
+        """
+        return list(self.lab_members.values())
+
+    def get_all_member_emails(self):
+        """
+        Returns a list of all lab member emails
+        """
+        return [member['email'] for member in self.lab_members.values()]
 
     def get_next_presenter(self, current_presenter_id):
         members_list = list(self.lab_members.values())
@@ -344,7 +364,7 @@ def alert_developer(e):
 
 if __name__ == "__main__":
     presentation_day = "Monday"
-    presentation_time = "2:00 PM"
+    presentation_time = "10:00 AM"
     maintenance_day = "Friday"
     location = "SSC 319"
 
