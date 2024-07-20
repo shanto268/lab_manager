@@ -135,12 +135,6 @@ class LabNotificationSystem:
         tracker[duty_type] = next_member_id
         with open('duty_tracker.json', 'w') as file:
             json.dump(tracker, file, indent=4)
-        #self.commit_and_push_changes()
-
-    def commit_and_push_changes(self):
-        subprocess.run(['git', 'add', 'duty_tracker.json'], check=True)
-        subprocess.run(['git', 'commit', '-m', 'Update duty tracker'], check=True)
-        subprocess.run(['git', 'push'], check=True)
 
     def is_there_meeting_next_week(self, today):
         # Check if next week today is a national holiday

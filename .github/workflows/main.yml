@@ -1,38 +1,16 @@
-name: Lab Notifications
+name: LFL Lab Manager
 
 on:
-  workflow_dispatch:
+  schedule:
+    - cron: '0 7 * * *' # This sets the job to run at 7:00 AM UTC every day
+  workflow_dispatch: # Allows manual trigger
 
 jobs:
-  presentation-reminders:
-    if: github.event.schedule == '0 7 * * 1'
+  run-lab-manager:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v3
-
-      - name: Set up Python
-        uses: actions/setup-python@v3
-        with:
-          python-version: '3.8'  # Specify your Python version
-
-      - name: Install dependencies
-        run: |
-          pip install -r requirements.txt  # Assuming you have a requirements.txt
-
-      - name: Send presentation reminders
-        run: python main.py
-        env:
-          GMAIL_USERNAME: ${{ secrets.GMAIL_USERNAME }}
-          GMAIL_PASSWORD: ${{ secrets.GMAIL_PASSWORD }}
-          SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
-          GOOGLE_CALENDAR_SERVICE_KEY: ${{ secrets.GOOGLE_CALENDAR_SERVICE_KEY }}
-
-  maintenance-reminders:
-    if: github.event.schedule == '0 7 * * 5'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository
+      - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Set up Python
@@ -42,36 +20,48 @@ jobs:
 
       - name: Install dependencies
         run: |
+          python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Send maintenance reminders
-        run: python main.py
+      - name: Decrypt client_secret.json
         env:
-          GMAIL_USERNAME: ${{ secrets.GMAIL_USERNAME }}
-          GMAIL_PASSWORD: ${{ secrets.GMAIL_PASSWORD }}
-          SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
-          GOOGLE_CALENDAR_SERVICE_KEY: ${{ secrets.GOOGLE_CALENDAR_SERVICE_KEY }}
-
-  snacks-reminders:
-    if: github.event.schedule == '0 7 * * 0'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v3
-
-      - name: Set up Python
-        uses: actions/setup-python@v3
-        with:
-          python-version: '3.8'
-
-      - name: Install dependencies
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
         run: |
-          pip install -r requirements.txt
+          openssl aes-256-cbc -salt -a -d -in client_secret.json.enc -out client_secret.json -pass pass:$SECRET_KEY -pbkdf2
 
-      - name: Send snacks reminders
-        run: python main.py
+      - name: Decrypt token.pickle
+        env:
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+        run: |
+          openssl aes-256-cbc -salt -a -d -in token.pickle.enc -out token.pickle -pass pass:$SECRET_KEY -pbkdf2
+
+      - name: Decrypt service_key.json
+        env:
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+        run: |
+          openssl aes-256-cbc -salt -a -d -in service_key.json.enc -out service_key.json -pass pass:$SECRET_KEY -pbkdf2
+
+      - name: Decrypt lab_members.json
+        env:
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+        run: |
+          openssl aes-256-cbc -salt -a -d -in lab_members.json.enc -out lab_members.json -pass pass:$SECRET_KEY -pbkdf2
+
+      - name: Run the lab manager script
         env:
           GMAIL_USERNAME: ${{ secrets.GMAIL_USERNAME }}
           GMAIL_PASSWORD: ${{ secrets.GMAIL_PASSWORD }}
           SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
-          GOOGLE_CALENDAR_SERVICE_KEY: ${{ secrets.GOOGLE_CALENDAR_SERVICE_KEY }}
+          ONENOTE_LCD: ${{ secrets.ONENOTE_LCD }}
+        run: |
+          python main.py
+
+      - name: Commit and push changes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          git add duty_tracker.json
+          git commit -m "Update duty tracker from GitHub Actions"
+          git push

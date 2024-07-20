@@ -8,6 +8,7 @@ This project serves as a lab manager for the [Levenson-Falk Lab](https://dornsif
   - [Project Structure](#project-structure)
   - [Setup and Operation](#setup-and-operation)
     - [Local Setup](#local-setup)
+    - [GitHub Actions Setup](#github-actions-setup)
     - [PythonAnywhere Setup](#pythonanywhere-setup)
     - [Handling Authentication](#handling-authentication)
     - [Mac Setup for Scheduled Execution](#mac-setup-for-scheduled-execution)
@@ -35,32 +36,76 @@ This project serves as a lab manager for the [Levenson-Falk Lab](https://dornsif
 
 ### Local Setup
 
-1. Install dependencies from `requirements.txt`.
-2. Set up environment variables for Gmail, Slack, and Google Calendar credentials.
+1. **Install Dependencies:**
+   Install the necessary dependencies from `requirements.txt`.
+
+   ```bash
+   python -m pip install --upgrade pip
+   pip install -r requirements.txt
+   ```
+
+2. **Set Up Environment Variables:**
+   Set up environment variables for Gmail, Slack, and Google Calendar credentials.
+
    ```bash
    export GMAIL_USER=<email>
    export GMAIL_PASSWORD=<password>
    export SLACK_TOKEN=<token>
-   export LAB_MEMBERS_INFO=<json file | base64>
-   export GOOGLE_CALENDAR_SERVICE_KEY=<calendar service key | base64>
    ```
-3. Move/Generate the `token.pickle` for Google Calendar API on the local machine.
+
+3. **Generate and Encrypt Sensitive Files:**
+   Move or generate the `client_secret.json`, `token.pickle`, `service_key.json`, and `lab_members.json` files locally. Encrypt these files using the following commands:
+
+   ```bash
+   openssl aes-256-cbc -salt -a -e -in client_secret.json -out client_secret.json.enc -pass pass:$SECRET_KEY -pbkdf2
+   openssl aes-256-cbc -salt -a -e -in token.pickle -out token.pickle.enc -pass pass:$SECRET_KEY -pbkdf2
+   openssl aes-256-cbc -salt -a -e -in service_key.json -out service_key.json.enc -pass pass:$SECRET_KEY -pbkdf2
+   openssl aes-256-cbc -salt -a -e -in lab_members.json -out lab_members.json.enc -pass pass:$SECRET_KEY -pbkdf2
+   ```
+
+4. **Commit Encrypted Files to Repository:**
+   Commit and push the encrypted files (`*.enc`) to your repository.
+
+### GitHub Actions Setup
+
+1. **Create GitHub Secrets:**
+   Go to your GitHub repository settings, navigate to `Secrets and variables` -> `Actions`, and add the following secrets:
+
+   - `SECRET_KEY`: Your encryption password.
+   - `GMAIL_USER`: Your Gmail username.
+   - `GMAIL_PASSWORD`: Your Gmail password.
+   - `SLACK_TOKEN`: Your Slack token.
+   - `GITHUB_TOKEN`: Your GitHub token (automatically provided by GitHub Actions).
+
+2. **Create GitHub Actions Workflow:**
+   Create a workflow file in `.github/workflows/main.yml`. Check the [GitHub Actions workflow](.github/workflows/main.yml) in this repository for reference.
+
+   The idea is to decrypt the sensitive files, set up the environment variables, and run the script using the decrypted files.
 
 ### PythonAnywhere Setup
 
-1. Upload the script files to PythonAnywhere.
-2. Set up a scheduled task to run `main.py` daily at 7 AM using cron.
-   - Cron file:
-     ```bash
-     0 7 * * * /home/<username>/lfl-lab-manager/venv/bin/python /home/<username>/lfl-lab-manager/main.py
-     ```
-3. Ensure `client_secret.json` and `token.pickle` are safely uploaded and handled.
+1. **Upload Script Files:**
+   Upload the script files and encrypted JSON files (`*.enc`) to PythonAnywhere.
+
+2. **Set Up Scheduled Task:**
+   Set up a scheduled task to run `main.py` daily at 7 AM using cron.
+
+   ```bash
+   0 7 * * * /home/<username>/lfl-lab-manager/venv/bin/python /home/<username>/lfl-lab-manager/main.py
+   ```
+
+3. **Upload and Decrypt Sensitive Files:**
+   Ensure `client_secret.json` and `token.pickle` are safely uploaded and handled. You may need to decrypt these files on PythonAnywhere before running your script.
 
 ### Handling Authentication
 
 - The script checks the validity of `token.pickle`.
 - If re-authentication is required, it sends an email notification.
 - Manually update `token.pickle` on PythonAnywhere after re-authenticating locally.
+
+---
+
+This updated blurb provides comprehensive instructions for setting up and running your workflow both locally and in the cloud using GitHub Actions and PythonAnywhere.
 
 ### Mac Setup for Scheduled Execution
 
