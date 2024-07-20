@@ -2,7 +2,7 @@ name: LFL Lab Manager
 
 on:
   schedule:
-    - cron: '0 7 * * *' # This sets the job to run at 7:00 AM UTC every day
+    - cron: '0 14 * * *' # This sets the job to run at 2:00 PM UTC every day, which is 7:00 AM PDT
   workflow_dispatch: # Allows manual trigger
 
 jobs:
