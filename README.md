@@ -75,7 +75,7 @@ This project serves as a lab manager for the [Levenson-Falk Lab](https://dornsif
    - `GMAIL_USER`: Your Gmail username.
    - `GMAIL_PASSWORD`: Your Gmail password.
    - `SLACK_TOKEN`: Your Slack token.
-   - `GITHUB_TOKEN`: Your GitHub PAT with at least `repo` scopes enabled.
+   - `GH_BOT`: Your GitHub PAT with at least `repo` scopes enabled.
 
 2. **Create GitHub Actions Workflow:**
    Create a workflow file in `.github/workflows/main.yml`. Check the [GitHub Actions workflow](.github/workflows/main.yml) in this repository for reference.
