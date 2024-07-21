@@ -72,5 +72,5 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git remote set-url origin https://x-access-token:${{ secrets.GH_BOT }}@github.com/${{ github.repository }}.git
           git add duty_tracker.json
-          git commit -m "Update duty tracker via GitHub Actions $(date '+%Y-%m-%d')"
+          git commit -m "Update duty tracker via GitHub Actions ($(date '+%Y-%m-%d'))"
           git push origin HEAD:main
