@@ -64,12 +64,18 @@ jobs:
         run: |
           python main.py
 
+      - name: Check for changes
+        id: changes
+        run: |
+          git diff --exit-code || echo "has_changes=true" >> $GITHUB_ENV
+
       - name: Commit and push changes
+        if: env.has_changes == 'true'
         env:
           GIT_AUTHOR_EMAIL: action@github.com
           GIT_COMMITTER_EMAIL: action@github.com
           GIT_HTTPS_USERNAME: shanto268 # update this
-          GIT_HTTPS_PASSWORD: ${{secrets.GH_BOT}} # update this
+          GIT_HTTPS_PASSWORD: ${{ secrets.GH_BOT }} # update this
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
