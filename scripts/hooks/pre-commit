@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# Check if lab_members.json is staged for commit
+if git diff --cached --name-only | grep -q 'lab_members.json'; then
+    echo "lab_members.json has changed. Encrypting the file..."
+
+    # Prompt for the secret key
+    read -sp "Enter encryption key: " SECRET_KEY
+    echo
+
+    # Encrypt lab_members.json
+    openssl aes-256-cbc -salt -a -e -in lab_members.json -out lab_members.json.enc -pass pass:$SECRET_KEY -pbkdf2
+
+    # Clear the secret key variable
+    unset SECRET_KEY
+
+    # Stage the encrypted file
+    git add lab_members.json.enc
+
+    # Notify the user
+    echo "lab_members.json has been encrypted and lab_members.json.enc has been staged for commit."
+fi
+

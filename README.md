@@ -66,6 +66,12 @@ This project serves as a lab manager for the [Levenson-Falk Lab](https://dornsif
 4. **Commit Encrypted Files to Repository:**
    Commit and push the encrypted files (`*.enc`) to your repository.
 
+5. Run the following command to set up Git hooks:
+
+```bash
+./scripts/setup-hooks.sh
+```
+
 ### GitHub Actions Setup
 
 1. **Create GitHub Secrets:**
