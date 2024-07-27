@@ -356,6 +356,21 @@ def alert_developer(e):
     content = f"System Generated Error Message:\n{bar}\n\n{str(e)}\n\nResolutions:\n{bar}\n\n{resolution_msg}"
     email_notifier.send_email([__email__], "Lab Notification System Error", content)
 
+def test_update_duty_tracker(system):
+    """Test function to update the duty tracker and push changes."""
+    print("Running test to update duty tracker...")
+
+    # Simulate updating the duty tracker
+    duty_type = "presentation"
+    next_member_id = "test_member_id"
+    system.update_duty_tracker(duty_type, next_member_id)
+
+    # Verify the update
+    with open('duty_tracker.json', 'r') as file:
+        tracker = json.load(file)
+    assert tracker[duty_type] == next_member_id
+    print("Duty tracker update test passed.")
+
 if __name__ == "__main__":
     presentation_day = "Monday"
     presentation_time = "10:00 AM"
@@ -370,7 +385,9 @@ if __name__ == "__main__":
         alert_developer(e)
         sys.exit(1)
     try:
-        system.run()
+        #system.run()
+        # Run the test case
+        test_update_duty_tracker(system)
     except Exception as e:
         print(f"Caught exception during execution: {e}")
         alert_developer(e)
