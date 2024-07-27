@@ -385,9 +385,9 @@ if __name__ == "__main__":
         alert_developer(e)
         sys.exit(1)
     try:
-        #system.run()
+        system.run()
         # Run the test case
-        test_update_duty_tracker(system)
+        #test_update_duty_tracker(system)
     except Exception as e:
         print(f"Caught exception during execution: {e}")
         alert_developer(e)
