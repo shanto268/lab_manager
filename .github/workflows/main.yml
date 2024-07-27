@@ -80,4 +80,4 @@ jobs:
           git config --global user.name "GitHub Action"
           git add duty_tracker.json
           git commit -m "Update duty tracker via GitHub Actions ($(date '+%Y-%m-%d %H:%M:%S'))"
-          git push https://x-access-token:${{ secrets.GH_BOT }}@github.com/${{ github.repository }}.git HEAD:main
+          git push https://x-access-token:${{ secrets.GH_BOT }}@github.com/shanto268/lab_manager.git HEAD:main
