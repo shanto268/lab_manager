@@ -69,13 +69,16 @@ jobs:
         run: |
           git diff --exit-code || echo "has_changes=true" >> $GITHUB_ENV
 
-      - name: Commit and push changes
+      - name: Commit and push if there are changes
         if: env.has_changes == 'true'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_BOT }}
         run: |
-          git config --global user.email "action@github.com"
-          git config --global user.name "GitHub Action"
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
           git add duty_tracker.json
-          git commit -m "Update duty tracker via GitHub Actions ($(date '+%Y-%m-%d %H:%M:%S'))"
-          git push https://x-access-token:${{ secrets.GH_BOT }}@github.com/shanto268/lab_manager.git HEAD:main
+          git commit -m "Updating the duty_tracker.json - $(date)"
+          git push
+        env:
+          GIT_AUTHOR_EMAIL: action@github.com
+          GIT_COMMITTER_EMAIL: action@github.com
+          GIT_HTTPS_USERNAME: shanto268 # update this
+          GIT_HTTPS_PASSWORD: ${{secrets.GH_BOT}} # update this
