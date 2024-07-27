@@ -72,11 +72,9 @@ jobs:
       - name: Commit and push changes
         if: env.has_changes == 'true'
         env:
-          GIT_AUTHOR_EMAIL: action@github.com
-          GIT_COMMITTER_EMAIL: action@github.com
-          GH_BOT: ${{ secrets.GH_BOT }}
+          GITHUB_TOKEN: ${{ secrets.GH_BOT }}
         run: |
-          git config --global user.email "$GIT_AUTHOR_EMAIL"
+          git config --global user.email "action@github.com"
           git config --global user.name "GitHub Action"
           git add duty_tracker.json
           git commit -m "Update duty tracker via GitHub Actions ($(date '+%Y-%m-%d %H:%M:%S'))"
