@@ -88,6 +88,8 @@ This project serves as a lab manager for the [Levenson-Falk Lab](https://dornsif
 
    The idea is to decrypt the sensitive files, set up the environment variables, and run the script using the decrypted files.
 
+**Ensure that "Read and write permissions" are enabled in Settings -> Actions -> General -> Workflow permissions:**
+
 ### PythonAnywhere Setup
 
 1. **Upload Script Files:**
