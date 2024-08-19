@@ -52,3 +52,6 @@ token.pickle
 # Ignore pycache
 __pycache__/
 *.py[cod]
+
+# Test files
+*_test.py

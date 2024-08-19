@@ -281,7 +281,7 @@ class LabNotificationSystem:
 
         ln2_instruction = "Please schedule a Liquid Nitrogen Fill Up with Jivin (jseward@usc.edu) and refill our tank"
 
-        instructions = [ln2_instruction, "Purchase any outstanding item left on the Purchasing Wish list", "Check Lab Inventory: napkins, water filters, gloves, masks, printing supply, compressed air", "Check Chemical Inventory", "Assess Water Filter Status", "Check cooling water temperature and pressure", "Fill up traps and dewars with LN2", "General Cleanup of the Lab (call people out if needed)","Monitor waste labels and complete them if they are missing any information", "Issue a Waste Pick Up Request with EH&S if Accumulation Date on a label is almost 9 months or if you need to dispose of the waste ASAP", "Version Control and Back Up Code Base on GitHub"]
+        instructions = [ln2_instruction, "Purchase any outstanding item left on the Purchasing Wish list", "After you purchase something put it on the #purchasing channel" ,"Check Lab Inventory: napkins, water filters, gloves, masks, printing supply, compressed air", "Check Chemical Inventory", "Assess Water Filter Status", "Check cooling water temperature and pressure", "Fill up traps and dewars with LN2", "General Cleanup of the Lab (call people out if needed)","Monitor waste labels and complete them if they are missing any information", "Issue a Waste Pick Up Request with EH&S if Accumulation Date on a label is almost 9 months or if you need to dispose of the waste ASAP", "Version Control and Back Up Code Base on GitHub"]
 
         reminders = ["🌳 Wear O2 monitor while doing LN2 fill up","🚪 Keep Back Room Door open while doing LN2 fill up","🪤 Don't position yourself such that you are trapped by the dewar","👖 Wear full pants on Lab Maintenance Day", "🚫 Don't reuse gloves", "🦠 Don't touch non-contaminated items with gloves", "🧤 Wear thermal gloves when working with LN2", "🥼🥽 Wear safety coat and goggles", "👥 Use the buddy system if not comfortable doing a task alone"]
 
@@ -372,8 +372,8 @@ def test_update_duty_tracker(system):
     print("Duty tracker update test passed.")
 
 if __name__ == "__main__":
-    presentation_day = "Monday"
-    presentation_time = "10:00 AM"
+    presentation_day = "Thursday"
+    presentation_time = "09:45 AM"
     maintenance_day = "Friday"
     location = "SSC 319"
 
