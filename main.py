@@ -140,11 +140,11 @@ class LabNotificationSystem:
         # Check if next week today is a national holiday
         today = today + timedelta(days=7)
         if today in self.us_holidays:
-            self.slack_notifier.send_message('#lfl-general', f"Reminder: No lab meeting next week due to a national holiday - {self.us_holidays.get(today)}")
+            self.slack_notifier.send_message('#lfl-general-exclusive', f"Reminder: No lab meeting next week due to a national holiday - {self.us_holidays.get(today)}")
             return True
         # Check if today is the first presentation day of the month
         elif today.day == self.presentation_day:
-            self.slack_notifier.send_message('#lfl-general', "Reminder: Today is 'Lab Citizen Day'")
+            self.slack_notifier.send_message('#lfl-general-exclusive', "Reminder: Today is 'Lab Citizen Day'")
             return True
         # All else case
         else:
@@ -154,7 +154,7 @@ class LabNotificationSystem:
         # Check if next week today is a national holiday
         next_week = datetime.today() + timedelta(days=7)
         if next_week in self.us_holidays:
-            self.slack_notifier.send_message('#lfl-general', f"Reminder: No lab meeting next week due to a national holiday - {self.us_holidays.get(next_week)}")
+            self.slack_notifier.send_message('#lfl-general-exclusive', f"Reminder: No lab meeting next week due to a national holiday - {self.us_holidays.get(next_week)}")
             return True
         else:
             return False
@@ -169,7 +169,7 @@ class LabNotificationSystem:
             # Check if next Monday is the first Monday of the next month
             if (next_monday.month != today.month) and (next_monday.day <= 7):
                 self.slack_notifier.send_message(
-                    '#lfl-general',
+                    '#lfl-general-exclusive',
                     f"Reminder: No lab meeting next week, we will have a Lab Citizen Day on {next_monday}. Don't know what to do?\nRefer to\n{lab_citizen_day_td_link}"
                 )
 
