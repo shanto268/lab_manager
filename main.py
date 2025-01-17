@@ -372,10 +372,11 @@ def test_update_duty_tracker(system):
     print("Duty tracker update test passed.")
 
 if __name__ == "__main__":
-    presentation_day = "Thursday"
-    presentation_time = "09:45 AM"
-    maintenance_day = "Friday"
-    location = "SSC 319"
+
+    presentation_day = os.environ.get('PRESENTATION_DAY')
+    presentation_time = os.environ.get('PRESENTATION_TIME')
+    maintenance_day = os.environ.get('MAINTENANCE_DAY')
+    location = os.environ.get('LOCATION')
 
     system = None
     try:
