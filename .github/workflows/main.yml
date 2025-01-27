@@ -61,6 +61,10 @@ jobs:
           GMAIL_PASSWORD: ${{ secrets.GMAIL_PASSWORD }}
           SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
           ONENOTE_LCD: ${{ secrets.ONENOTE_LCD }}
+          PRESENTATION_DAY: ${{ secrets.PRESENTATION_DAY }}
+          PRESENTATION_TIME: ${{ secrets.PRESENTATION_TIME }}
+          MAINTENANCE_DAY: ${{ secrets.MAINTENANCE_DAY }}
+          LOCATION: ${{ secrets.LOCATION }}
         run: |
           python main.py
 
