@@ -65,6 +65,7 @@ jobs:
           PRESENTATION_TIME: ${{ secrets.PRESENTATION_TIME }}
           MAINTENANCE_DAY: ${{ secrets.MAINTENANCE_DAY }}
           LOCATION: ${{ secrets.LOCATION }}
+          SEND_PRESENTATION_REMINDERS: ${{ secrets.SEND_PRESENTATION_REMINDERS }}
         run: |
           python main.py
 

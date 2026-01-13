@@ -91,7 +91,7 @@ def load_google_service_key(file_path):
 
 
 class LabNotificationSystem:
-    def __init__(self, presentation_day, presentation_time, maintenance_day, location):
+    def __init__(self, presentation_day, presentation_time, maintenance_day, location, send_presentation_reminders):
         self.lab_members = ConfigLoader('lab_members.json').load_config()
         self.gmail_username = os.environ.get('GMAIL_USERNAME')
         self.gmail_password = os.environ.get('GMAIL_PASSWORD')
@@ -104,6 +104,7 @@ class LabNotificationSystem:
         self.presentation_time = presentation_time
         self.location = location
         self.us_holidays = holidays.US()
+        self.send_presentation_reminders = send_presentation_reminders
 
 
         self.email_notifier = EmailNotifier(self.gmail_username, self.gmail_password)
@@ -197,46 +198,52 @@ class LabNotificationSystem:
         if self.holiday_next_week():
             print("No lab meeting next week due to a national holiday")
         else:
-            print("Sending presentation reminders...")
             print("tracker: ", tracker)
             current_presenter_id = tracker.get('presentation', None)
             presenters, next_presenter_id, is_group_presentation = self.get_next_presenter(current_presenter_id)
 
             pres_date = today + timedelta(days=7)
-            pres_date = pres_date
 
             # Handle group presentation for undergraduates
             if is_group_presentation:
                 print("Group Presentation by undergrads")
-                for presenter_info in presenters:
-                    subject = "LFL Lab Meeting Presentation"
-                    message = f"Hello {presenter_info['name']},\n\nYou are scheduled to present at next week's lab meeting - {pres_date}." + MEETING_SIGNATURE
-                    self.email_notifier.send_email([presenter_info['email']], subject, message)
+                if self.send_presentation_reminders:
+                    print("Sending presentation reminders...")
+                    for presenter_info in presenters:
+                        subject = "LFL Lab Meeting Presentation"
+                        message = f"Hello {presenter_info['name']},\n\nYou are scheduled to present at next week's lab meeting - {pres_date}." + MEETING_SIGNATURE
+                        self.email_notifier.send_email([presenter_info['email']], subject, message)
 
-                # Create Google Calendar event for group presentation
-                self.calendar_manager.create_timed_event(
-                    title="Undergraduate Group Presentation",
-                    date=pres_date,
-                    start_time_str=self.presentation_time,
-                    attendees=[member['email'] for member in presenters]
-                )
+                    # Create Google Calendar event for group presentation
+                    self.calendar_manager.create_timed_event(
+                        title="Undergraduate Group Presentation",
+                        date=pres_date,
+                        start_time_str=self.presentation_time,
+                        attendees=[member['email'] for member in presenters]
+                    )
+                else:
+                    print("Presentation reminders disabled, skipping emails and calendar events")
 
             # Handle individual presentation
             else:
                 presenter_info = presenters[0]  # Only one presenter
-                print(f"Group Presentation by {presenter_info['name']}")
-                subject = "LFL Lab Meeting Presentation"
-                message = f"Hello {presenter_info['name']},\n\nYou are scheduled to present at next week's lab meeting - {pres_date}." + MEETING_SIGNATURE
-                self.email_notifier.send_email([presenter_info['email']], subject, message)
+                print(f"Presentation by {presenter_info['name']}")
+                if self.send_presentation_reminders:
+                    print("Sending presentation reminders...")
+                    subject = "LFL Lab Meeting Presentation"
+                    message = f"Hello {presenter_info['name']},\n\nYou are scheduled to present at next week's lab meeting - {pres_date}." + MEETING_SIGNATURE
+                    self.email_notifier.send_email([presenter_info['email']], subject, message)
 
-                # Create Google Calendar event for individual presentation
-                self.calendar_manager.create_timed_event(
-                    title="Group Meeting Presentation by " + presenter_info['name'],
-                    date=pres_date,
-                    start_time_str=self.presentation_time,
-                    attendees=[member['email'] for member in presenters],
-                    location=self.location
-                )
+                    # Create Google Calendar event for individual presentation
+                    self.calendar_manager.create_timed_event(
+                        title="Group Meeting Presentation by " + presenter_info['name'],
+                        date=pres_date,
+                        start_time_str=self.presentation_time,
+                        attendees=[member['email'] for member in presenters],
+                        location=self.location
+                    )
+                else:
+                    print("Presentation reminders disabled, skipping emails and calendar events")
 
             # Update the duty tracker
             self.update_duty_tracker('presentation', next_presenter_id)
@@ -338,8 +345,9 @@ class LabNotificationSystem:
             # Send email reminder
             snack_person_info = next((member for member in eligible_members if member['id'] == next_snacks_id), {})
             if snack_person_info:
+                meeting_date = (date.today() + timedelta(days=1)).strftime("%A, %B %d")
                 subject = "Lab Snacks Reminder"
-                message = f"Hello {snack_person_info['name']},\n\nThis is a reminder for you to bring snacks for the lab meeting on {presentation_day}." + SERVICE_SIGNATURE
+                message = f"Hello {snack_person_info['name']},\n\nThis is a reminder for you to bring snacks for the lab meeting tomorrow ({meeting_date})." + SERVICE_SIGNATURE
                 self.email_notifier.send_email([snack_person_info['email']], subject, message)
 
             print("Snacks bought by - ", snack_person_info['name'])
@@ -377,10 +385,11 @@ if __name__ == "__main__":
     presentation_time = os.environ.get('PRESENTATION_TIME')
     maintenance_day = os.environ.get('MAINTENANCE_DAY')
     location = os.environ.get('LOCATION')
+    send_presentation_reminders = os.environ.get('SEND_PRESENTATION_REMINDERS', 'false').lower() == 'true'
 
     system = None
     try:
-        system = LabNotificationSystem(presentation_day, presentation_time, maintenance_day, location)
+        system = LabNotificationSystem(presentation_day, presentation_time, maintenance_day, location, send_presentation_reminders)
     except Exception as e:
         print(f"Caught exception during initialization: {e}")
         alert_developer(e)
