@@ -104,7 +104,7 @@ class LabNotificationSystem:
         self.presentation_time = presentation_time
         self.location = location
         self.us_holidays = holidays.US()
-        self.send_presentation_reminders = send_presentation_reminders
+        self.presentation_reminders_enabled = send_presentation_reminders
 
 
         self.email_notifier = EmailNotifier(self.gmail_username, self.gmail_password)
@@ -207,7 +207,7 @@ class LabNotificationSystem:
             # Handle group presentation for undergraduates
             if is_group_presentation:
                 print("Group Presentation by undergrads")
-                if self.send_presentation_reminders:
+                if self.presentation_reminders_enabled:
                     print("Sending presentation reminders...")
                     for presenter_info in presenters:
                         subject = "LFL Lab Meeting Presentation"
@@ -228,7 +228,7 @@ class LabNotificationSystem:
             else:
                 presenter_info = presenters[0]  # Only one presenter
                 print(f"Presentation by {presenter_info['name']}")
-                if self.send_presentation_reminders:
+                if self.presentation_reminders_enabled:
                     print("Sending presentation reminders...")
                     subject = "LFL Lab Meeting Presentation"
                     message = f"Hello {presenter_info['name']},\n\nYou are scheduled to present at next week's lab meeting - {pres_date}." + MEETING_SIGNATURE
