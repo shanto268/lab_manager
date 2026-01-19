@@ -91,7 +91,7 @@ def load_google_service_key(file_path):
 
 
 class LabNotificationSystem:
-    def __init__(self, presentation_day, presentation_time, maintenance_day, location, send_presentation_reminders):
+    def __init__(self, presentation_day, presentation_time, maintenance_day, location, send_presentation_reminders, force_maintenance_reminder):
         self.lab_members = ConfigLoader('lab_members.json').load_config()
         self.gmail_username = os.environ.get('GMAIL_USERNAME')
         self.gmail_password = os.environ.get('GMAIL_PASSWORD')
@@ -105,6 +105,7 @@ class LabNotificationSystem:
         self.location = location
         self.us_holidays = holidays.US()
         self.presentation_reminders_enabled = send_presentation_reminders
+        self.force_maintenance_reminder = force_maintenance_reminder
 
 
         self.email_notifier = EmailNotifier(self.gmail_username, self.gmail_password)
@@ -298,7 +299,10 @@ class LabNotificationSystem:
 
     
     def send_lab_maintenance_reminders(self):
-        if datetime.today().weekday() == self.maintenance_day:
+        should_send = datetime.today().weekday() == self.maintenance_day or self.force_maintenance_reminder
+        if should_send:
+            if self.force_maintenance_reminder:
+                print("Force maintenance reminder enabled, sending regardless of day...")
             tracker = self.load_duty_tracker()
             current_maintenance_id = tracker.get('maintenance', None)
             eligible_members = [member for member in self.lab_members.values() if member['role'] in ['PhD Student', 'Post-Doc']]
@@ -386,10 +390,11 @@ if __name__ == "__main__":
     maintenance_day = os.environ.get('MAINTENANCE_DAY')
     location = os.environ.get('LOCATION')
     send_presentation_reminders = os.environ.get('SEND_PRESENTATION_REMINDERS', 'false').lower() == 'true'
+    force_maintenance_reminder = os.environ.get('FORCE_MAINTENANCE_REMINDER', 'false').lower() == 'true'
 
     system = None
     try:
-        system = LabNotificationSystem(presentation_day, presentation_time, maintenance_day, location, send_presentation_reminders)
+        system = LabNotificationSystem(presentation_day, presentation_time, maintenance_day, location, send_presentation_reminders, force_maintenance_reminder)
     except Exception as e:
         print(f"Caught exception during initialization: {e}")
         alert_developer(e)

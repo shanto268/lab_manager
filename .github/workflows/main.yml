@@ -3,7 +3,16 @@ name: LFL Lab Manager
 on:
   schedule:
     - cron: '0 14 * * *' # This sets the job to run at 2:00 PM UTC every day, which is 7:00 AM PDT
-  workflow_dispatch: # Allows manual trigger
+  workflow_dispatch:
+    inputs:
+      force_maintenance:
+        description: 'Force send maintenance reminder (for missed reminders)'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
 
 jobs:
   run-lab-manager:
@@ -66,6 +75,7 @@ jobs:
           MAINTENANCE_DAY: ${{ secrets.MAINTENANCE_DAY }}
           LOCATION: ${{ secrets.LOCATION }}
           SEND_PRESENTATION_REMINDERS: ${{ secrets.SEND_PRESENTATION_REMINDERS }}
+          FORCE_MAINTENANCE_REMINDER: ${{ github.event.inputs.force_maintenance || 'false' }}
         run: |
           python main.py
 
