@@ -60,9 +60,10 @@ jobs:
 
       - name: Decrypt lab_members.json
         env:
-          SECRET_KEY: ${{ secrets.SECRET_KEY_LAB }}
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          SECRET_KEY_LAB: ${{ secrets.SECRET_KEY_LAB }}
         run: |
-          openssl aes-256-cbc -salt -a -d -in lab_members.json.enc -out lab_members.json -pass pass:$SECRET_KEY_LAB -pbkdf2
+          openssl aes-256-cbc -salt -a -d -in lab_members.json.enc -out lab_members.json -pass pass:${SECRET_KEY_LAB:-$SECRET_KEY} -pbkdf2
 
       - name: Run the lab manager script
         env:

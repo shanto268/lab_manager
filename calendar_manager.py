@@ -81,16 +81,16 @@ class CalendarManager:
             raise
 
 
-    def create_timed_event(self, title, date, start_time_str, attendees, calendar_id='primary', location="SSC 319"):
-        """Create a calendar event based on a start time string."""
+    def create_timed_event(self, title, date, start_time_str, attendees, calendar_id='primary', location="SSC 319", duration_minutes=90):
+        """Create a calendar event based on a start time string (default 90 mins: 12:00-1:30 PM)."""
         time_zone = 'America/Los_Angeles'
         
         # Parse the start time string and set it to the provided date
         start_time = parse(start_time_str)
         start_datetime = datetime.combine(date.date(), start_time.time())
 
-        # Add one hour to get the end time
-        end_datetime = start_datetime + timedelta(hours=1)
+        # Group meetings are 90 minutes (e.g. 12:00 PM to 1:30 PM)
+        end_datetime = start_datetime + timedelta(minutes=duration_minutes)
 
         event_body = {
             'summary': title,

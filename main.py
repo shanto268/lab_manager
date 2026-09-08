@@ -127,7 +127,10 @@ class LabNotificationSystem:
         print("\n")
 
     def get_next_member(self, members, current_member_id):
-        current_index = members.index(next((m for m in members if m['id'] == current_member_id), None))
+        current_member = next((m for m in members if m['id'] == current_member_id), members[0] if members else None)
+        if not current_member or current_member not in members:
+            return members[0]['id'] if members else None
+        current_index = members.index(current_member)
         next_index = (current_index + 1) % len(members)
         return members[next_index]['id']
 
@@ -385,10 +388,10 @@ def test_update_duty_tracker(system):
 
 if __name__ == "__main__":
 
-    presentation_day = os.environ.get('PRESENTATION_DAY')
-    presentation_time = os.environ.get('PRESENTATION_TIME')
-    maintenance_day = os.environ.get('MAINTENANCE_DAY')
-    location = os.environ.get('LOCATION')
+    presentation_day = os.environ.get('PRESENTATION_DAY', 'Monday')
+    presentation_time = os.environ.get('PRESENTATION_TIME', '12:00 PM')
+    maintenance_day = os.environ.get('MAINTENANCE_DAY', 'Friday')
+    location = os.environ.get('LOCATION', 'SSC 319')
     send_presentation_reminders = os.environ.get('SEND_PRESENTATION_REMINDERS', 'false').lower() == 'true'
     force_maintenance_reminder = os.environ.get('FORCE_MAINTENANCE_REMINDER', 'false').lower() == 'true'
 
